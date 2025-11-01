@@ -38,5 +38,3 @@ export const profileAPI = {
     return api.get('/profile/favorites')
   }
 }
-
-

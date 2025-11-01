@@ -27,5 +27,3 @@ export const notificationAPI = {
     return api.get('/notifications/unread-count')
   }
 }
-
-

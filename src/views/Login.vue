@@ -16,18 +16,18 @@
       <!-- 登录表单 -->
       <div class="bg-white card p-8">
         <form @submit.prevent="handleLogin" class="space-y-6">
-          <!-- 用户名输入 -->
+          <!-- 邮箱输入 -->
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-              用户名/学号
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              邮箱
             </label>
             <input
-              id="username"
-              v-model="loginForm.username"
-              type="text"
+              id="email"
+              v-model="loginForm.email"
+              type="email"
               required
               class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="请输入用户名或学号"
+              placeholder="请输入邮箱地址"
             />
           </div>
 
@@ -157,7 +157,7 @@
             />
           </div>
 
-          <div>
+          <!-- <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">学号/工号</label>
             <input
               v-model="registerForm.studentId"
@@ -166,7 +166,7 @@
               class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="请输入学号或工号"
             />
-          </div>
+          </div> -->
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
@@ -201,7 +201,7 @@
             />
           </div>
 
-          <div>
+          <!-- <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">用户类型</label>
             <select
               v-model="registerForm.userType"
@@ -211,7 +211,7 @@
               <option value="teacher">教师</option>
               <option value="admin">管理员</option>
             </select>
-          </div>
+          </div> -->
 
           <div class="flex space-x-4 pt-4">
             <button
@@ -246,13 +246,13 @@ export default {
       isLoading: false,
       errorMessage: '',
       loginForm: {
-        username: '',
+        email: '',
         password: '',
         rememberMe: false
       },
       registerForm: {
         username: '',
-        studentId: '',
+        studentId: '',/////////////////////////////
         email: '',
         password: '',
         confirmPassword: '',
@@ -260,22 +260,46 @@ export default {
       }
     }
   },
+
   methods: {
-    ...mapActions(['login', 'register']),
-    
-    async handleLogin() {
-      this.isLoading = true
-      this.errorMessage = ''
+  ...mapActions(['login']),
+  async handleLogin() {
+    try {
+      // 显示加载状态
+      this.loading = true;
       
-      try {
-        await this.login(this.loginForm)
-        this.$router.push('/')
-      } catch (error) {
-        this.errorMessage = error.message || '登录失败，请检查用户名和密码'
-      } finally {
-        this.isLoading = false
+      // 调用 Vuex 中的 login action
+      const user = await this.login({
+        email: this.loginForm.email,
+        password: this.loginForm.password
+      });
+      
+      // 登录成功后的处理
+      if (this.$message) {
+        this.$message.success('登录成功');
+      } else {
+        console.log('登录成功');
       }
-    },
+      
+      // 根据用户角色跳转到相应页面
+      if (user.role === 'admin') {
+        this.$router.push('/admin');
+      } else {
+        this.$router.push('/'); // 或者跳转到用户主页
+      }
+    } catch (error) {
+      
+      // 登录失败处理 - 安全地访问错误信息
+      const errorMessage = (error && error.message) || '登录失败，请检查账号密码';
+      if (this.$message) {
+        this.$message.error(errorMessage);
+      } else {
+        console.error('登录失败:', errorMessage);
+      }
+    } finally {
+      this.loading = false;
+    }
+  },
     
     async handleRegister() {
       if (this.registerForm.password !== this.registerForm.confirmPassword) {
@@ -294,10 +318,10 @@ export default {
     
     quickLogin(type) {
       if (type === 'student') {
-        this.loginForm.username = 'S20201234'
+        this.loginForm.username = 'student@example.com'
         this.loginForm.password = '123456'
       } else if (type === 'admin') {
-        this.loginForm.username = 'admin'
+        this.loginForm.username = 'admin@example.com'
         this.loginForm.password = '123456'
       }
       this.handleLogin()

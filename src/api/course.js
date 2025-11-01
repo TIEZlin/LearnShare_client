@@ -8,8 +8,8 @@ export const courseAPI = {
   },
 
   // 获取课程详情
-  getCourseById(id, params = {}) {
-    return api.get(`/courses/${id}`, { params })
+  getCourseById(id) {
+    return api.get(`/courses/${id}`)
   },
 
   // 搜索课程
@@ -54,5 +54,4 @@ export const courseAPI = {
     return api.delete(`/courses/${courseId}/enroll`)
   }
 }
-
 

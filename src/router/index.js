@@ -53,9 +53,10 @@ const routes = [
   }
 ]
 
+// 使用Vite环境变量语法替换Vue CLI语法
 const router = new VueRouter({
   mode: 'history',
-  base: process.env.BASE_URL,
+  base: import.meta.env.BASE_URL || '/',
   routes
 })
 

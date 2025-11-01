@@ -1,12 +1,9 @@
 import axios from 'axios'
 
-// 创建axios实例
+// 创建统一的axios实例（用于所有请求）
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_BASE_URL || 'http://localhost:3000/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: '/api',
+  timeout: 10000
 })
 
 // 请求拦截器 - 添加认证token
@@ -47,7 +44,7 @@ api.interceptors.response.use(
 
 export default api
 
-// 导出所有API模块
+// 导出所有API模块，都使用同一个api实例
 export { authAPI } from './auth'
 export { courseAPI } from './course'
 export { resourceAPI } from './resource'
@@ -57,4 +54,3 @@ export { uploadAPI } from './upload'
 export { notificationAPI } from './notification'
 export { searchAPI } from './search'
 export { statsAPI } from './stats'
-

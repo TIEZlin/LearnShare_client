@@ -32,5 +32,3 @@ export const statsAPI = {
     return api.get('/stats/resource-heat', { params })
   }
 }
-
-

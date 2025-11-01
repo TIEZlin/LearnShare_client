@@ -192,93 +192,16 @@ app.get('/api/courses', (req, res) => {
 
 app.get('/api/courses/:id', (req, res) => {
   const courseId = parseInt(req.params.id)
-  const { include, userId } = req.query
   const course = courses.find(c => c.id === courseId)
   
   if (!course) {
     return res.status(404).json({ code: 404, message: '课程不存在' })
   }
 
-  // 构建响应数据
-  let responseData = { ...course }
-
-  // 根据include参数添加关联数据
-  if (include) {
-    const includes = include.split(',')
-    
-    if (includes.includes('reviews') || includes.includes('all')) {
-      responseData.reviews = [
-        {
-          id: 1,
-          author: '张同学',
-          rating: 5,
-          content: '课程内容很实用，老师讲解清晰',
-          date: '2024-01-15'
-        },
-        {
-          id: 2,
-          author: '李同学',
-          rating: 4,
-          content: '作业有一定难度，但收获很大',
-          date: '2024-01-10'
-        }
-      ]
-    }
-
-    if (includes.includes('resources') || includes.includes('all')) {
-      responseData.resources = [
-        {
-          id: 1,
-          title: '课程讲义第一章',
-          type: 'pdf',
-          downloads: 156,
-          size: '2.5MB'
-        },
-        {
-          id: 2,
-          title: '实验指导书',
-          type: 'word',
-          downloads: 89,
-          size: '1.8MB'
-        }
-      ]
-    }
-
-    if (includes.includes('students') || includes.includes('all')) {
-      responseData.students = [
-        { id: 'S20201234', name: '张明', grade: '2022级' },
-        { id: 'S20205678', name: '李华', grade: '2022级' }
-      ]
-    }
-
-    // 添加课程统计信息
-    responseData.statistics = {
-      totalStudents: 120,
-      averageRating: course.rating,
-      totalResources: responseData.resources?.length || 0,
-      totalDownloads: 1250
-    }
-
-    // 添加课程详细信息
-    responseData.schedule = {
-      semester: '2024春季',
-      time: '周一 8:00-10:00',
-      location: '教学楼A101'
-    }
-    responseData.requirements = ['高等数学', '线性代数']
-    responseData.objectives = ['掌握基本概念', '培养编程思维']
-  }
-
-  // 如果提供了userId，添加用户相关信息
-  if (userId) {
-    responseData.isEnrolled = false // 模拟用户是否已选课
-    responseData.isFavorite = false // 模拟用户是否已收藏
-  }
-
   res.json({
     code: 200,
     message: '获取课程详情成功',
-    data: responseData
+    data: course
   })
 })
 

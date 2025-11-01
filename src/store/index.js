@@ -333,34 +333,125 @@ export default new Vuex.Store({
     // 认证相关
     async login({ commit }, credentials) {
       try {
+        commit('SET_LOADING', { key: 'auth', value: true })
+        commit('CLEAR_ERROR')
         const response = await authAPI.login(credentials)
-        const { user, token } = response.data
-        commit('SET_AUTH', { user, token })
-        return user
+        
+        // 安全地访问响应数据
+        const baseResponse = response && response.baseResponse;
+        const userData = response && response.data && response.data.user;
+        const tokenData = response && response.data && response.data.token;
+        
+        // 根据OpenAPI文档，响应包含baseResponse和user
+        if (baseResponse && baseResponse.code === 200) {
+          const user = userData || (response.data && response.data);
+          const token = tokenData || response.token || response.access_token;
+          
+          if (user && token) {
+            commit('SET_AUTH', { user, token })
+            return user
+          } else {
+            throw new Error('响应数据不完整')
+          }
+        } else {
+          throw new Error(baseResponse?.message || '登录失败')
+        }
       } catch (error) {
-        throw error
+        // 更安全的错误处理
+        const errorMessage = (error && error.message) || '登录失败'
+        commit('SET_ERROR', errorMessage)
+        throw new Error(errorMessage)
+      } finally { 
+        commit('SET_LOADING', { key: 'auth', value: false })
       }
     },
     
     async register({ commit }, userData) {
       try {
+        commit('SET_LOADING', { key: 'auth', value: true })
         const response = await authAPI.register(userData)
-        const { user, token } = response.data
-        commit('SET_AUTH', { user, token })
-        return user
+        
+        // 根据 OpenAPI 文档，响应包含 baseResponse
+        if (response.baseResponse && response.baseResponse.code === 200) {
+          const { user } = response
+          const token = response.token || response.access_token
+          commit('SET_AUTH', { user, token })
+          commit('CLEAR_ERROR')
+          return user
+        } else {
+          throw new Error(response.baseResponse?.message || '注册失败')
+        }
       } catch (error) {
+        commit('SET_ERROR', error.message || '注册失败')
         throw error
+      } finally {
+        commit('SET_LOADING', { key: 'auth', value: false })
       }
     },
     
-    logout({ commit }) {
-      commit('CLEAR_AUTH')
+  
+    // 登出
+    async logout({ commit }) {
+      try {
+        await authAPI.logout()
+      } catch (error) {
+        console.error('Logout API error:', error)
+      }finally { 
+        commit('CLEAR_AUTH')
+        commit('CLEAR_ERROR')
+      }
     },
     
     initAuth({ commit }) {
       commit('INIT_AUTH')
     },
+
+    //添加邮箱验证码获取功能
+    async getEmailCode({ commit }, email) {
+      try {
+        const response = await authAPI.getEmailCode(email)
+        return response
+      } catch (error) {
+        throw error
+      }
+    },
+
+
+    // 添加邮箱验证功能
+    async verifyEmail({ commit }, data) {
+      try {
+        const response = await authAPI.verifyEmail(data)
+        return response
+      } catch (error) {
+        throw error
+      }
+    },
+
+    //添加密码重置功能
+    async resetPassword({ commit }, data) {
+      try {
+        const response = await authAPI.resetPassword(data)
+        return response
+      } catch (error) {
+        throw error
+      }
+    },
+
+    //添加token刷新功能
+    async refreshToken({ commit }) {
+      try {
+        const response = await authAPI.refreshToken()
+        const { token } = response.data
+        commit('SET_AUTH', { user: state.currentUser, token })
+        return token
+      } catch (error) {
+        //刷新失败则登出
+        commit('CLEAR_AUTH')
+        throw error
+      }
+    },
     
+
     updateFilter({ commit }, { key, value }) {
       commit('SET_FILTER', { key, value })
     },
