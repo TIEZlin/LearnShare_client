@@ -1,7 +1,10 @@
 <template>
-  <div class="app-container">
-    <NavBar />
-    <router-view />
+  <div class="app-container min-h-screen flex flex-col">
+    <NavBar v-if="$route.path !== '/login'" />
+    <main class="flex-grow">
+      <router-view />
+    </main>
+    <Footer v-if="$route.path !== '/login'" />
     <ErrorHandler />
     <LoadingSpinner 
       :loading="globalLoading" 
@@ -16,6 +19,7 @@
 
 <script>
 import NavBar from './components/NavBar.vue'
+import Footer from './components/Footer.vue'
 import ErrorHandler from './components/ErrorHandler.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import { mapState } from 'vuex'
@@ -24,6 +28,7 @@ export default {
   name: 'App',
   components: {
     NavBar,
+    Footer,
     ErrorHandler,
     LoadingSpinner
   },

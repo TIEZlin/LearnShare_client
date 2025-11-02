@@ -8,7 +8,6 @@
 
 .app-container {
   width: 100%;
-  max-width: 1440px;
   margin: 0 auto;
   background-color: #F8F9FA;
 }
@@ -118,6 +117,35 @@
   color: white;
 }
 
+/* 隐藏滚动条但保持滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 平滑滚动 */
+.scrollbar-hide {
+  scroll-behavior: smooth;
+}
+
+/* 无限滚动动画 */
+.infinite-scroll {
+  animation: scroll-horizontal linear infinite;
+  will-change: transform;
+}
+
+@keyframes scroll-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 
 
 

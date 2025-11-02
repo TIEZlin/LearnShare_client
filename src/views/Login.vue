@@ -1,6 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+  <div class="min-h-screen relative flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <!-- Canvas动态渐变背景 -->
+    <GradientBackground />
+    
+    <!-- 登录内容，确保在Canvas之上 -->
+    <div class="max-w-md w-full space-y-8 relative z-10">
       <!-- Logo和标题 -->
       <div class="text-center">
         <img 
@@ -15,7 +19,7 @@
 
       
       <!-- 登录表单 -->
-      <div class="bg-white card p-8">
+      <div class="bg-white bg-opacity-95 backdrop-blur-sm card p-8 shadow-2xl">
         <form @submit.prevent="handleLogin" class="space-y-6">
           <!-- 邮箱输入 -->
           <div>
@@ -115,7 +119,7 @@
       </div>
 
       <!-- 快速登录选项 -->
-      <div class="bg-white card p-6">
+      <div class="bg-white bg-opacity-95 backdrop-blur-sm card p-6 shadow-2xl">
         <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">快速登录</h3>
         <div class="grid grid-cols-2 gap-4">
           <button
@@ -138,7 +142,7 @@
 
     <!-- 注册模态框 -->
     <div v-if="showRegister" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+      <div class="bg-white bg-opacity-95 backdrop-blur-sm rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold text-gray-900">注册新账户</h3>
           <button @click="showRegister = false" class="text-gray-400 hover:text-gray-600">
@@ -225,9 +229,13 @@
 
 <script>
 import { mapActions } from 'vuex'
+import GradientBackground from '../components/GradientBackground.vue'
 
 export default {
   name: 'Login',
+  components: {
+    GradientBackground
+  },
   data() {
     return {
       showPassword: false,
