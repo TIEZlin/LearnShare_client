@@ -462,7 +462,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
 import CourseCard from '../components/CourseCard.vue'
-import { courseAPI } from '../api/course'
+import { courseAPI } from '../api/index'
 
 export default {
   name: 'Courses',
@@ -514,12 +514,6 @@ export default {
       }
     }
   },
-  created() {
-    // 加载搜索历史
-    this.loadSearchHistory()
-    // 页面加载时自动获取所有课程
-    this.loadCoursesWithSearch()
-  },
   beforeDestroy() {
     // 清除事件监听器和定时器
     document.removeEventListener('click', this.closeSearchHistory)
@@ -550,6 +544,12 @@ export default {
       } catch (e) {
         console.error('保存搜索历史失败:', e)
       }
+    },
+    
+    // 清除所有搜索历史
+    clearAllHistory() {
+      this.searchHistory = []
+      this.saveSearchHistory()
     },
     
     // 添加搜索记录
@@ -658,24 +658,35 @@ export default {
     // 执行搜索
     async executeSearch() {
       const keyword = this.searchKeyword.trim()
-      if (!keyword) return
       
       this.isSearching = true
-      this.hasSearched = true
+      this.hasSearched = false // 空搜索时不设置为已搜索状态，显示全部课程
       this.showSearchHistory = false
       this.searchSuggestions = []
       
-      // 添加到搜索历史
-      this.addSearchHistory(keyword)
+      // 只有非空关键词才添加到搜索历史
+      if (keyword) {
+        this.hasSearched = true
+        this.addSearchHistory(keyword)
+      }
       
       try {
-        // 调用课程搜索API
+        // 调用课程搜索API，空关键词时显示全部课程
         await this.loadCoursesWithSearch(keyword)
       } catch (e) {
         console.error('搜索课程失败:', e)
       } finally {
         this.isSearching = false
       }
+    },
+    
+    // 清除搜索
+    clearSearch() {
+      this.searchKeyword = ''
+      this.hasSearched = false
+      this.showSearchHistory = false
+      this.searchSuggestions = []
+      this.loadCoursesWithSearch()
     },
     
     // 加载课程（带搜索功能）
@@ -694,7 +705,11 @@ export default {
         const num = parseFloat(String(this.filters.rating).replace('分以上', ''))
         if (!isNaN(num)) params.minRating = num
       }
-      // 学分 -> 暂不映射（文档未定义学分筛选）
+      // 学分筛选
+      if (this.filters.credits && this.filters.credits !== '全部学分') {
+        const credits = parseInt(this.filters.credits)
+        if (!isNaN(credits)) params.credits = credits
+      }
       // 分页
       params.page_size = 20
       params.page_num = 1
@@ -704,7 +719,13 @@ export default {
         console.log('请求参数:', params)
         
         // 直接调用API而不是通过store action，以便查看完整响应
-        const response = await courseAPI.searchCoursesDoc(params)
+        const api = courseAPI
+        if (!api) {
+          console.error('courseAPI未定义')
+          throw new Error('courseAPI未定义')
+        }
+        
+        const response = await api.searchCoursesDoc(params)
         console.log('API完整响应:', response)
         
         const data = response.data
@@ -724,6 +745,20 @@ export default {
           console.log('BaseResponse:', data.baseResponse)
           if (data.baseResponse.courses) {
             coursesList = data.baseResponse.courses
+          }
+        } else if (data && data.data) {
+          // 检查data.data中的数据
+          if (data.data.courses) {
+            coursesList = data.data.courses
+          } else if (Array.isArray(data.data)) {
+            coursesList = data.data
+          }
+        } else if (data && data.response) {
+          // 检查response中的数据
+          if (data.response.courses) {
+            coursesList = data.response.courses
+          } else if (Array.isArray(data.response)) {
+            coursesList = data.response
           }
         }
         
