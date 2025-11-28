@@ -168,6 +168,16 @@ docker-compose up -d
 - 🔵 **学生登录**: 自动填入学生测试账号
 - 🔴 **管理员登录**: 自动填入管理员测试账号
 
+### 本地开发登陆账号（用于功能测试）
+
+为方便本地功能联调，已内置模拟登录（默认开启，见 `.env.development.local` 中 `VITE_USE_MOCK_AUTH=true`）。使用以下账号即可本地登录：
+
+- 学生账号：账号 `student@local.dev`，密码 `123456`
+- 管理员账号：账号 `admin@local.dev`，密码 `123456`
+- 额外演示账号：`demo@local.dev`、`test@local.dev`，密码均为 `123456`
+
+如需改为对接后端，将 `VITE_USE_MOCK_AUTH=false`，登录将直接请求后端接口。
+
 ### 响应式数据管理
 - 使用Vuex管理全局状态
 - 课程、资源、用户等数据统一管理
