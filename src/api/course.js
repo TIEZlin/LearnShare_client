@@ -60,12 +60,21 @@ export const courseAPI = {
 
 
   getCourseComments(courseId, params = {}, config = {}) {
-    const cfg = { params, ...(config || {}) }
+    // 根据API文档，确保包含必需参数
+    const defaultParams = {
+      page_size: 20,
+      page_num: 1
+    }
+    
+    // 合并默认参数和用户提供的参数
+    const mergedParams = { ...defaultParams, ...(params || {}) }
+    const cfg = { params: mergedParams, ...(config || {}) }
+    
     return api.get(`/courses/${courseId}/comments`, cfg).catch((err) => {
       const status = err?.response?.status
       if (status === 404 || status === 405) {
         console.warn('[getCourseComments] /courses/:id/comments 未实现，尝试 /course_comments?courseId=:id', { courseId })
-        const cfg2 = { params: { courseId, ...(params || {}) }, ...(config || {}) }
+        const cfg2 = { params: { courseId, ...mergedParams }, ...(config || {}) }
         return api.get('/course_comments', cfg2).catch((err2) => {
           const s2 = err2?.response?.status
           if (s2 === 404 || s2 === 405) {

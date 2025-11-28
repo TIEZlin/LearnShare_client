@@ -215,28 +215,6 @@ export default {
         alert('请选择评分并填写评论')
       }
     },
-    watch: {
-      selectedResource: {
-        immediate: true,
-        async handler(res) {
-          try {
-            if (res && res.id) {
-              await this.$store.dispatch('fetchResourceComments', res.id)
-            } else {
-              // 未选中资源时，清空评论，避免残留
-              this.$store.commit('SET_RESOURCE_COMMENTS', [])
-            }
-          } catch (error) {
-            console.error('加载资源评论失败:', {
-              status: error?.response?.status,
-              data: error?.response?.data
-            })
-            const msg = error?.response?.data?.message || error?.message || '加载资源评论失败'
-            this.$root?.$emit?.('message', msg, 'error')
-          }
-        }
-      }
-    },
     downloadResource() {
       if (!this.selectedResource) return
       this.$store.commit('INCREMENT_RESOURCE_DOWNLOADS', this.selectedResource.id)
@@ -299,7 +277,29 @@ export default {
         console.error('资源评论点赞操作失败:', { id, likedBefore: comment.liked, status, msg })
         this.$root?.$emit?.('message', msg, 'error')
       }
-    },
+    }
+  },
+  watch: {
+    selectedResource: {
+      immediate: true,
+      async handler(res) {
+        try {
+          if (res && res.id) {
+            await this.$store.dispatch('fetchResourceComments', res.id)
+          } else {
+            // 未选中资源时，清空评论，避免残留
+            this.$store.commit('SET_RESOURCE_COMMENTS', [])
+          }
+        } catch (error) {
+          console.error('加载资源评论失败:', {
+            status: error?.response?.status,
+            data: error?.response?.data
+          })
+          const msg = error?.response?.data?.message || error?.message || '加载资源评论失败'
+          this.$root?.$emit?.('message', msg, 'error')
+        }
+      }
+    }
   },
   async created() {
     // 若未选择资源，默认选第一条
