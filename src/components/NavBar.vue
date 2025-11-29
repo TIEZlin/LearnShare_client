@@ -39,6 +39,9 @@
         <!-- 已登录状态 -->
         <template v-else>
           <div class="flex items-center space-x-4">
+            <!-- 通知铃铛 -->
+            <NotificationBell />
+            
             <!-- 用户信息 -->
             <div class="flex items-center space-x-2">
               <img 
@@ -100,10 +103,14 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
+import NotificationBell from './NotificationBell.vue'
 
 export default {
   name: 'NavBar',
+  components: {
+    NotificationBell
+  },
   data() {
     return {
       searchKeyword: '',
@@ -186,3 +193,4 @@ export default {
   }
 }
 </script>
+

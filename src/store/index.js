@@ -118,12 +118,18 @@ export default new Vuex.Store({
     // 我的资源
     myResources: [],
 
+    // 通知与消息
+    notifications: [],
+    unreadNotificationsCount: 0,
+
     // 加载状态
     loading: {
       courses: false,
       resources: false,
       users: false,
-      statistics: false
+      statistics: false,
+      notifications: false,
+      notificationsUnread: false
     },
 
     // 错误状态
@@ -296,6 +302,31 @@ export default new Vuex.Store({
 
     CLEAR_ERROR(state) {
       state.error = null
+    }
+    ,
+    // 通知相关
+    SET_NOTIFICATIONS(state, notifications) {
+      state.notifications = Array.isArray(notifications) ? notifications : []
+    },
+    SET_UNREAD_NOTIFICATIONS_COUNT(state, count) {
+      state.unreadNotificationsCount = Number(count) || 0
+    },
+    MARK_NOTIFICATION_READ(state, notificationId) {
+      const idx = state.notifications.findIndex(n => n.id === notificationId)
+      if (idx !== -1) {
+        const item = state.notifications[idx]
+        state.notifications.splice(idx, 1, { ...item, isRead: true })
+      }
+      if (state.unreadNotificationsCount > 0) {
+        state.unreadNotificationsCount -= 1
+      }
+    },
+    MARK_ALL_NOTIFICATIONS_READ(state) {
+      state.notifications = state.notifications.map(n => ({ ...n, isRead: true }))
+      state.unreadNotificationsCount = 0
+    },
+    REMOVE_NOTIFICATION(state, notificationId) {
+      state.notifications = state.notifications.filter(n => n.id !== notificationId)
     }
   },
   
@@ -1092,6 +1123,93 @@ async login({ commit }, credentials) {
         throw error
       }
     }
+    ,
+    // 通知相关
+    async fetchNotifications({ commit }, params = {}) {
+      try {
+        commit('SET_LOADING', { key: 'notifications', value: true })
+        commit('CLEAR_ERROR')
+        const { notificationAPI } = await import('../api/notification')
+        const response = await notificationAPI.getNotifications(params)
+        const data = response?.data
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.data?.notifications)
+              ? data.data.notifications
+              : Array.isArray(data?.notifications)
+                ? data.notifications
+                : []
+        commit('SET_NOTIFICATIONS', list)
+        const unread = list.filter(n => !n.isRead).length
+        commit('SET_UNREAD_NOTIFICATIONS_COUNT', unread)
+        return list
+      } catch (error) {
+        const msg = error?.response?.data?.baseResponse?.message || error.message || '获取通知失败'
+        commit('SET_ERROR', msg)
+        throw new Error(msg)
+      } finally {
+        commit('SET_LOADING', { key: 'notifications', value: false })
+      }
+    },
+
+    async fetchUnreadNotificationsCount({ commit }) {
+      try {
+        commit('SET_LOADING', { key: 'notificationsUnread', value: true })
+        commit('CLEAR_ERROR')
+        const { notificationAPI } = await import('../api/notification')
+        const response = await notificationAPI.getUnreadCount()
+        const count = response?.data?.count ?? response?.data?.data?.count ?? response?.data?.unread ?? 0
+        commit('SET_UNREAD_NOTIFICATIONS_COUNT', count)
+        return count
+      } catch (error) {
+        const msg = error?.response?.data?.baseResponse?.message || error.message || '获取未读数量失败'
+        commit('SET_ERROR', msg)
+        throw new Error(msg)
+      } finally {
+        commit('SET_LOADING', { key: 'notificationsUnread', value: false })
+      }
+    },
+
+    async markNotificationAsRead({ commit }, notificationId) {
+      try {
+        commit('CLEAR_ERROR')
+        const { notificationAPI } = await import('../api/notification')
+        await notificationAPI.markAsRead(notificationId)
+        commit('MARK_NOTIFICATION_READ', notificationId)
+      } catch (error) {
+        const msg = error?.response?.data?.baseResponse?.message || error.message || '标记通知已读失败'
+        commit('SET_ERROR', msg)
+        throw new Error(msg)
+      }
+    },
+
+    async markAllNotificationsAsRead({ commit }) {
+      try {
+        commit('CLEAR_ERROR')
+        const { notificationAPI } = await import('../api/notification')
+        await notificationAPI.markAllAsRead()
+        commit('MARK_ALL_NOTIFICATIONS_READ')
+      } catch (error) {
+        const msg = error?.response?.data?.baseResponse?.message || error.message || '全部标记已读失败'
+        commit('SET_ERROR', msg)
+        throw new Error(msg)
+      }
+    },
+
+    async deleteNotification({ commit }, notificationId) {
+      try {
+        commit('CLEAR_ERROR')
+        const { notificationAPI } = await import('../api/notification')
+        await notificationAPI.deleteNotification(notificationId)
+        commit('REMOVE_NOTIFICATION', notificationId)
+      } catch (error) {
+        const msg = error?.response?.data?.baseResponse?.message || error.message || '删除通知失败'
+        commit('SET_ERROR', msg)
+        throw new Error(msg)
+      }
+    }
   },
   
   getters: {
@@ -1158,5 +1276,11 @@ async login({ commit }, credentials) {
       
       return filtered
     }
+    ,
+    // 通知相关
+    notifications: (state) => state.notifications,
+    unreadNotificationsCount: (state) => state.unreadNotificationsCount
   }
 })
+
+
