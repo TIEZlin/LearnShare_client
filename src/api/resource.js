@@ -79,33 +79,42 @@ export const resourceAPI = {
   getResourceComments(resourceId, params = {}, config = {}) {
     const cfg = { params, ...(config || {}) }
     
-    // 1. 首先尝试API文档中指定的路径（注意：baseURL已经包含/api）
+    // 1. 首先尝试API文档中指定的正确路径：/api/resource/{resource_id}/comment
     return api.get(`/resource/${resourceId}/comment`, cfg).catch((err) => {
       const status = err?.response?.status
       if (status === 404 || status === 405) {
-        console.warn('[getResourceComments] /api/resource/:id/comment 未实现，尝试 /resources/:id/comments', { resourceId })
+        console.warn('[getResourceComments] /api/resource/:id/comment 未实现，尝试 /resource_comments/{resource_id}', { resourceId })
         
-        // 2. 尝试标准REST路径
-        return api.get(`/resources/${resourceId}/comments`, cfg).catch((err2) => {
+        // 2. 尝试其他可能的路径
+        return api.get(`/resource_comments/${resourceId}`, cfg).catch((err2) => {
           const s2 = err2?.response?.status
           if (s2 === 404 || s2 === 405) {
-            console.warn('[getResourceComments] /resources/:id/comments 未实现，尝试 /resource_comments?resourceId=:id', { resourceId })
-            const cfg2 = { params: { resourceId, ...(params || {}) }, ...(config || {}) }
+            console.warn('[getResourceComments] /resource_comments/:id 未实现，尝试 /resources/:id/comments', { resourceId })
             
-            // 3. 尝试查询参数路径
-            return api.get('/resource_comments', cfg2).catch((err3) => {
+            // 3. 尝试标准REST路径
+            return api.get(`/resources/${resourceId}/comments`, cfg).catch((err3) => {
               const s3 = err3?.response?.status
               if (s3 === 404 || s3 === 405) {
-                console.warn('[getResourceComments] /resource_comments 未实现，尝试 /resources_comments?resourceId=:id', { resourceId })
+                console.warn('[getResourceComments] /resources/:id/comments 未实现，尝试 /resource_comments?resourceId=:id', { resourceId })
+                const cfg2 = { params: { resourceId, ...(params || {}) }, ...(config || {}) }
                 
-                // 4. 尝试复数形式的查询参数路径
-                return api.get('/resources_comments', cfg2).catch((err4) => {
+                // 4. 尝试查询参数路径
+                return api.get('/resource_comments', cfg2).catch((err4) => {
                   const s4 = err4?.response?.status
                   if (s4 === 404 || s4 === 405) {
-                    console.warn('[getResourceComments] 所有评论路径未实现，尝试 /resources/:id/reviews', { resourceId })
+                    console.warn('[getResourceComments] /resource_comments 未实现，尝试 /resources_comments?resourceId=:id', { resourceId })
                     
-                    // 5. 最后尝试reviews路径作为回退
-                    return api.get(`/resources/${resourceId}/reviews`, cfg)
+                    // 5. 尝试复数形式的查询参数路径
+                    return api.get('/resources_comments', cfg2).catch((err5) => {
+                      const s5 = err5?.response?.status
+                      if (s5 === 404 || s5 === 405) {
+                        console.warn('[getResourceComments] 所有评论路径未实现，尝试 /resources/:id/reviews', { resourceId })
+                        
+                        // 6. 最后尝试reviews路径作为回退
+                        return api.get(`/resources/${resourceId}/reviews`, cfg)
+                      }
+                      return Promise.reject(err5)
+                    })
                   }
                   return Promise.reject(err4)
                 })
@@ -122,31 +131,68 @@ export const resourceAPI = {
 
 
 
-  // 提交资源评论（兼容后端 /resource_comments/ 路径）
+  // 提交资源评论（根据API文档使用正确路径：POST /resource_comments/{resource_id}）
   // commentData 可以是浏览器的 FormData 或 node 的 form-data 实例
   submitResourceComment(commentData, config = {}) {
     const cfg = { ...(config || {}) }
     // 如果是 node 的 form-data，它会提供 getHeaders()
     if (commentData && typeof commentData.getHeaders === 'function') {
       cfg.headers = { ...(cfg.headers || {}), ...commentData.getHeaders() }
+      // 如果是FormData，直接使用
+      const resourceId = commentData?.get('resourceId') || commentData?.get('resource_id');
+      if (!resourceId) {
+        return Promise.reject(new Error('提交评论时缺少resource_id参数'));
+      }
+      return api.post(`/resource_comments/${resourceId}`, commentData, cfg);
     }
-    return api.post('/resource_comments', commentData, cfg)
+    
+    // 从commentData中提取resource_id
+    const resourceId = commentData?.resource_id || commentData?.resourceId;
+    if (!resourceId) {
+      return Promise.reject(new Error('提交评论时缺少resource_id参数'));
+    }
+    
+    // 只发送后端期望的字段，避免发送resourceId
+    const requestBody = {
+      content: commentData.content,
+      rating: commentData.rating
+    };
+    
+    return api.post(`/resource_comments/${resourceId}`, requestBody, cfg)
   },
 
-  // 提交资源评分（兼容后端 /resource_ratings/ 路径）
+  // 提交资源评分（根据API文档使用正确路径：POST /resource_ratings/{resource_id}）
   // ratingData 可以是浏览器的 FormData 或 node 的 form-data 实例
   submitResourceRating(ratingData, config = {}) {
     const cfg = { ...(config || {}) }
     // 如果是 node 的 form-data，它会提供 getHeaders()
     if (ratingData && typeof ratingData.getHeaders === 'function') {
       cfg.headers = { ...(cfg.headers || {}), ...ratingData.getHeaders() }
+      // 如果是FormData，直接使用
+      const resourceId = ratingData?.get('resourceId') || ratingData?.get('resource_id');
+      if (!resourceId) {
+        return Promise.reject(new Error('提交评分时缺少resource_id参数'));
+      }
+      return api.post(`/resource_ratings/${resourceId}`, ratingData, cfg);
     }
-    return api.post('/resource_ratings', ratingData, cfg)
+    
+    // 从ratingData中提取resource_id
+    const resourceId = ratingData?.resource_id || ratingData?.resourceId;
+    if (!resourceId) {
+      return Promise.reject(new Error('提交评分时缺少resource_id参数'));
+    }
+    
+    // 只发送后端期望的字段，避免发送resourceId
+    const requestBody = {
+      rating: ratingData.rating
+    };
+    
+    return api.post(`/resource_ratings/${resourceId}`, requestBody, cfg)
   },
 
   // 删除资源评分
   // 支持两种用法：
-  //  - deleteResourceRating(ratingId) -> DELETE /resource_ratings/:id
+  //  - deleteResourceRating(ratingId) -> DELETE /resource_ratings/{rating_id} (根据API文档)
   //  - deleteResourceRating() -> DELETE /resource_ratings (后端根据 token 删除当前用户的评分或批量删除)
   deleteResourceRating(ratingId, config = {}) {
     const cfg = { ...(config || {}) }
@@ -158,7 +204,7 @@ export const resourceAPI = {
 
   // 删除资源评论
   // 用法：
-  //  - deleteResourceComment(commentId) -> DELETE /resource_comments/:id
+  //  - deleteResourceComment(commentId) -> DELETE /resource_comments/{comment_id} (根据API文档)
   //  - deleteResourceComment(null, params) -> DELETE /resource_comments?...
   // 同时对路径 /resources_comments 做回退兼容
   deleteResourceComment(commentId, params = {}, config = {}) {
@@ -181,11 +227,20 @@ export const resourceAPI = {
       return Promise.reject(err)
     })
   },
+  // 资源评论点赞
+  // 根据API文档：POST /api/resource_comments/{comment_id}/likes
   likeResourceComment(commentId, config = {}) {
-    return api.post(`/resource_comments/${commentId}/like`, null, config)
+    // 构建请求体，根据API文档需要提供action参数
+    const data = { action: 'like' }
+    return api.post(`/resource_comments/${commentId}/likes`, data, config)
   },
+  
+  // 资源评论取消点赞
+  // 根据API文档：POST /api/resource_comments/{comment_id}/likes，action设为cancel_like
   unlikeResourceComment(commentId, config = {}) {
-    return api.delete(`/resource_comments/${commentId}/like`, config)
+    // 构建请求体，根据API文档需要提供action参数
+    const data = { action: 'cancel_like' }
+    return api.post(`/resource_comments/${commentId}/likes`, data, config)
   },
   // 获取我的资源
   getMyResources() {
@@ -207,4 +262,3 @@ export const resourceAPI = {
     return api.get(`/resources/${resourceId}/stats`)
   }
 }
-

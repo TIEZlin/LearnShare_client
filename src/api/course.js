@@ -91,14 +91,21 @@ export const courseAPI = {
 
 
   // 提交课程评论（支持 FormData 或 Node form-data）
-  // 示例后端路径: POST /course_comments/ (
+  // 根据API文档，使用正确的路径格式: POST /course_comments/{course_id}
   submitCourseComment(commentData, config = {}) {
     const cfg = { ...(config || {}) }
     // 如果是 node 的 form-data，它会提供 getHeaders()
     if (commentData && typeof commentData.getHeaders === 'function') {
       cfg.headers = { ...(cfg.headers || {}), ...commentData.getHeaders() }
     }
-    return api.post('/course_comments', commentData, cfg)
+    
+    // 从commentData中提取course_id
+    const courseId = commentData?.course_id || commentData?.courseId;
+    if (!courseId) {
+      return Promise.reject(new Error('提交评论时缺少course_id参数'));
+    }
+    
+    return api.post(`/course_comments/${courseId}`, commentData, cfg)
   },
 
   // 删除课程评论
@@ -113,7 +120,7 @@ export const courseAPI = {
     return api.delete('/course_comments', cfg)
   },
 
-  // 提交课程评分（兼容后端 /course_ratings/ 路径）
+  // 提交课程评分（根据API文档使用正确路径）
   likeCourseComment(commentId, config = {}) {
     return api.post(`/course_comments/${commentId}/like`, null, config)
   },
@@ -126,7 +133,14 @@ export const courseAPI = {
     if (ratingData && typeof ratingData.getHeaders === 'function') {
       cfg.headers = { ...(cfg.headers || {}), ...ratingData.getHeaders() }
     }
-    return api.post('/course_ratings', ratingData, cfg)
+    
+    // 从ratingData中提取course_id
+    const courseId = ratingData?.course_id || ratingData?.courseId;
+    if (!courseId) {
+      return Promise.reject(new Error('提交评分时缺少course_id参数'));
+    }
+    
+    return api.post(`/course_ratings/${courseId}`, ratingData, cfg)
   },
 
   // 删除课程评分

@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue2'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    port: 3000, // 修改为 3000 以匹配后端白名单
+    port: 8081, // 修改为 3000 以匹配后端白名单
     open: true,
     // 允许的域名（部署到云服务器时使用）
     allowedHosts: [
@@ -19,7 +19,7 @@ export default defineConfig({
     // 添加代理配置来解决CORS问题
     proxy: {
       '/api': {
-        target: 'http://204.152.192.27:8888', // 指向真实的后端地址
+        target: 'http://localhost:8888', // 指向真实的后端地址
         changeOrigin: true,
         secure: false
       }

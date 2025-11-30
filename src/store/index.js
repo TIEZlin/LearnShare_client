@@ -343,26 +343,77 @@ async login({ commit }, credentials) {
     // 适配实际的API响应格式
     let user, token;
     
-    // 检查响应格式 - 根据您提供的信息进行适配
-    if (response && response.data && response.data.baseResponse) {
-      // 检查成功的状态码 (10000)
-      if (response.data.baseResponse.code === 10000) {
-        // 从响应中提取实际的用户数据
-        user = response.data.user;
+    console.log('登录响应完整数据:', response);
+    console.log('登录响应头:', response.headers);
+    console.log('登录响应体:', response.data);
+    
+    // 1. 首先尝试从响应头中获取token（适用于所有响应格式）
+    token = response.headers['authorization'] || 
+            response.headers['x-auth-token'] || 
+            response.headers['access-token'] ||
+            response.headers['Authorization'] ||
+            response.headers['X-Auth-Token'] ||
+            response.headers['Access-Token'];
+    
+    // 如果响应头中的token包含Bearer前缀，需要去掉
+    if (token && token.startsWith('Bearer ')) {
+      token = token.substring(7);
+    }
+    
+    console.log('从响应头提取的token:', token);
+    
+    // 2. 检查响应格式并提取用户数据和可能的token
+    if (response && response.data) {
+      // 检查是否是baseResponse格式
+      if (response.data.baseResponse) {
+        console.log('响应格式: baseResponse');
+        console.log('baseResponse code:', response.data.baseResponse.code);
+        console.log('baseResponse message:', response.data.baseResponse.message);
         
-        // 从响应头中获取token
-        token = response.headers['authorization'] || response.headers['x-auth-token'] || response.headers['access-token'];
-        // 如果响应头中的token包含Bearer前缀，需要去掉
-        if (token && token.startsWith('Bearer ')) {
-          token = token.substring(7);
+        // 检查成功的状态码 (10000)
+        if (response.data.baseResponse.code === 10000) {
+          // 从响应中提取实际的用户数据
+          user = response.data.user;
+          
+          console.log('从响应体提取的用户数据:', user);
+          
+          // 如果响应头中没有token，检查响应体中是否有
+          if (!token) {
+            token = response.data.token || 
+                   response.data.access_token || 
+                   response.data.data?.token ||
+                   response.data.data?.access_token ||
+                   response.data.result?.token ||
+                   response.data.result?.access_token;
+            
+            console.log('从响应体提取的token:', token);
+          }
+        } else {
+          throw new Error(response.data.baseResponse.message || '登录失败')
         }
+      } else {
+        // 非baseResponse格式，可能是直接返回用户数据和token
+        console.log('响应格式: 直接数据格式');
+        
+        // 尝试从响应体中提取用户数据
+        user = response.data.user || 
+               response.data.data || 
+               response.data.result || 
+               response.data;
+        
+        console.log('从响应体提取的用户数据:', user);
         
         // 如果响应头中没有token，检查响应体中是否有
         if (!token) {
-          token = response.data.token || response.data.access_token || response.data.data?.token;
+          token = response.data.token || 
+                 response.data.access_token || 
+                 response.data.data?.token ||
+                 response.data.data?.access_token ||
+                 response.data.result?.token ||
+                 response.data.result?.access_token;
+          
+          console.log('从响应体提取的token:', token);
         }
-      } else {
-        throw new Error(response.data.baseResponse.message || '登录失败')
       }
     }
     
@@ -478,13 +529,12 @@ async login({ commit }, credentials) {
     // 登出
     async logout({ commit }) {
       try {
-        // 调用登出API
-        await authAPI.logout()
-      } catch (error) {
-        console.error('Logout API error:', error)
-      }finally { 
+        // 直接在前端清除认证状态，不依赖后端API
+        // 这是因为后端服务器可能没有实现logout端点
         commit('CLEAR_AUTH')
         commit('CLEAR_ERROR')
+      } catch (error) {
+        console.error('Logout error:', error)
       }
     },
     
@@ -714,15 +764,26 @@ async login({ commit }, credentials) {
         // 再提交评论（同时附带评分，后端可选择是否使用）
         const res = await resourceAPI.submitResourceComment({ resourceId, content: comment, rating })
 
-        const serverComment = res?.data || null
-        const newComment = serverComment && serverComment.id
-          ? serverComment
+        // 兼容后端返回：若返回评论实体则直接使用，否则本地构造一条
+        const serverComment = res?.data?.data || res?.data || null
+        const newComment = serverComment && (serverComment.id || serverComment.commentId)
+          ? {
+              id: serverComment.id || serverComment.commentId,
+              author: serverComment.user?.username || author,
+              rating: Number(serverComment.rating) || rating,
+              date: serverComment.createdAt 
+                ? new Date(Number(serverComment.createdAt) < 1000000000000 ? Number(serverComment.createdAt) * 1000 : Number(serverComment.createdAt)).toLocaleDateString()
+                : new Date().toISOString().split('T')[0],
+              content: serverComment.content || comment,
+              likes: Number(serverComment.likes || 0)
+            }
           : {
               id: Date.now(),
               author,
               rating,
               date: new Date().toISOString().split('T')[0],
-              content: comment
+              content: comment,
+              likes: 0
             }
 
         commit('ADD_RESOURCE_COMMENT', newComment)
@@ -750,7 +811,8 @@ async login({ commit }, credentials) {
         console.log('[fetchResourceComments] API响应数据:', data)
         
         // 根据API文档，响应数据结构可能包含baseResp和comments
-        const responseData = data
+        // 支持更复杂的嵌套数据结构，如data.data
+        const responseData = data?.data || data
         const apiComments = Array.isArray(responseData) ? responseData : 
                           (responseData?.comments || 
                            responseData?.items || 
@@ -772,7 +834,8 @@ async login({ commit }, credentials) {
             content: comment.content,
             likes: comment.likes,
             createdAt: comment.createdAt,
-            user: comment.user
+            user: comment.user,
+            rating: comment.rating
           })
           
           // 处理时间戳：createdAt是秒级Unix时间戳，需要转换为毫秒级
@@ -784,6 +847,9 @@ async login({ commit }, credentials) {
               const milliseconds = timestamp < 1000000000000 ? timestamp * 1000 : timestamp
               formattedDate = new Date(milliseconds).toLocaleDateString()
             }
+          } else if (comment.date) {
+            // 如果提供了date字段，直接使用
+            formattedDate = comment.date
           }
           
           return {
@@ -791,8 +857,8 @@ async login({ commit }, credentials) {
             author: comment.user?.username || (comment.userId ? `用户${comment.userId}` : '匿名用户'),  // 优先使用user.username，然后是userId，最后是匿名用户
             content: comment.content || '',
             likes: Number(comment.likes || 0),  // 确保点赞数是数字类型
-            date: formattedDate,  // 使用正确转换的日期
-            rating: Number(comment.rating || Math.floor(Math.random() * 3) + 3),  // 随机生成评分(3-5星)作为fallback
+            date: formattedDate || new Date().toLocaleDateString(),  // 使用正确转换的日期，如无则使用当前日期
+            rating: Number(comment.rating) || Number(comment.score) || Math.floor(Math.random() * 3) + 3,  // 支持rating和score字段，随机生成评分(3-5星)作为最终fallback
             liked: Boolean(comment.liked || false)  // 默认未点赞
           }
         })
@@ -804,7 +870,9 @@ async login({ commit }, credentials) {
         console.error('[fetchResourceComments] 加载资源评论失败:', {
           message: error?.message,
           status: error?.response?.status,
-          data: error?.response?.data
+          data: error?.response?.data,
+          url: error?.response?.config?.url,
+          method: error?.response?.config?.method
         })
         
         // 添加模拟数据支持，确保在API调用失败时也能展示评论功能
