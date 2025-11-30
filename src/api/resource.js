@@ -78,20 +78,37 @@ export const resourceAPI = {
   // 获取资源评论（支持分页 params & 回退到 reviews 路径）
   getResourceComments(resourceId, params = {}, config = {}) {
     const cfg = { params, ...(config || {}) }
-    return api.get(`/resources/${resourceId}/comments`, cfg).catch((err) => {
+    
+    // 1. 首先尝试API文档中指定的路径（注意：baseURL已经包含/api）
+    return api.get(`/resource/${resourceId}/comment`, cfg).catch((err) => {
       const status = err?.response?.status
       if (status === 404 || status === 405) {
-        console.warn('[getResourceComments] /resources/:id/comments 未实现，尝试 /resource_comments?resourceId=:id', { resourceId })
-        const cfg2 = { params: { resourceId, ...(params || {}) }, ...(config || {}) }
-        return api.get('/resource_comments', cfg2).catch((err2) => {
+        console.warn('[getResourceComments] /api/resource/:id/comment 未实现，尝试 /resources/:id/comments', { resourceId })
+        
+        // 2. 尝试标准REST路径
+        return api.get(`/resources/${resourceId}/comments`, cfg).catch((err2) => {
           const s2 = err2?.response?.status
           if (s2 === 404 || s2 === 405) {
-            console.warn('[getResourceComments] /resource_comments 未实现，尝试 /resources_comments?resourceId=:id', { resourceId })
-            return api.get('/resources_comments', cfg2).catch((err3) => {
+            console.warn('[getResourceComments] /resources/:id/comments 未实现，尝试 /resource_comments?resourceId=:id', { resourceId })
+            const cfg2 = { params: { resourceId, ...(params || {}) }, ...(config || {}) }
+            
+            // 3. 尝试查询参数路径
+            return api.get('/resource_comments', cfg2).catch((err3) => {
               const s3 = err3?.response?.status
               if (s3 === 404 || s3 === 405) {
-                console.warn('[getResourceComments] 所有评论路径未实现，尝试 /resources/:id/reviews', { resourceId })
-                return api.get(`/resources/${resourceId}/reviews`, cfg)
+                console.warn('[getResourceComments] /resource_comments 未实现，尝试 /resources_comments?resourceId=:id', { resourceId })
+                
+                // 4. 尝试复数形式的查询参数路径
+                return api.get('/resources_comments', cfg2).catch((err4) => {
+                  const s4 = err4?.response?.status
+                  if (s4 === 404 || s4 === 405) {
+                    console.warn('[getResourceComments] 所有评论路径未实现，尝试 /resources/:id/reviews', { resourceId })
+                    
+                    // 5. 最后尝试reviews路径作为回退
+                    return api.get(`/resources/${resourceId}/reviews`, cfg)
+                  }
+                  return Promise.reject(err4)
+                })
               }
               return Promise.reject(err3)
             })

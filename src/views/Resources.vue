@@ -167,8 +167,14 @@ export default {
       return this.filteredResources.slice(0, 3)
     }
   },
+  created() {
+    // 组件加载时自动加载资源数据
+    this.onSearchDoc()
+  },
+  
   methods: {
     ...mapActions(['updateFilter', 'searchResources', 'getResourceDownloadUrl', 'reportResource', 'uploadResource']),
+    
     onCourseFilterChange() {
       this.updateFilter({ key: 'courseTitle', value: this.selectedCourseTitle })
     },

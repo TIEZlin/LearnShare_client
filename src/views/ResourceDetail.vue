@@ -1,5 +1,16 @@
 <template>
   <div class="px-8 py-6" v-if="selectedResource">
+    <!-- 返回资源广场按钮 -->
+    <div class="mb-4">
+      <button 
+        @click="$router.push('/resources')"
+        class="btn-secondary flex items-center mb-4"
+      >
+        <span class="iconify mr-2" data-icon="mdi:arrow-left"></span>
+        返回资源广场
+      </button>
+    </div>
+    
     <div class="grid grid-cols-3 gap-8">
       <!-- 左侧资源信息 -->
       <div class="col-span-1">
