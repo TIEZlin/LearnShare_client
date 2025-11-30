@@ -247,9 +247,39 @@
             <span class="iconify text-xl mr-1" data-icon="mdi:calendar"></span>
             <span class="text-gray-700">秋季学期</span>
           </div>
+          <!-- 显示课程上课时间 -->
+          <div class="flex items-start mb-4">
+            <span class="iconify text-xl mr-1 mt-1" data-icon="mdi:clock-outline"></span>
+            <div class="text-gray-700">
+              <div v-for="(slot, index) in selectedCourse.schedule" :key="index">
+                {{ getDayName(slot.day) }} {{ getTimeString(slot.timeSlot) }} ({{ slot.location }})
+              </div>
+              <span v-if="!selectedCourse.schedule || selectedCourse.schedule.length === 0">
+                暂无时间安排
+              </span>
+            </div>
+          </div>
           <div class="mt-6">
             <h3 class="font-bold mb-2">课程简介</h3>
             <p class="text-gray-600">{{ selectedCourse.description }}</p>
+          </div>
+          
+          <div class="mt-6 pt-4 border-t border-gray-200">
+             <button 
+               v-if="!isEnrolled(selectedCourse.id)"
+               class="btn-primary w-full py-3 text-lg"
+               @click="handleEnroll(selectedCourse)"
+             >
+               选修此课程
+             </button>
+             <button 
+               v-else
+               class="bg-green-100 text-green-700 border border-green-300 font-medium py-3 px-4 rounded-lg w-full cursor-not-allowed flex justify-center items-center"
+               disabled
+             >
+               <span class="iconify mr-2" data-icon="mdi:check-circle"></span>
+               已选修
+             </button>
           </div>
         </div>
 
@@ -500,7 +530,7 @@ export default {
       }
     },
   computed: {
-    ...mapState(['selectedCourse', 'comments', 'userRating', 'filters', 'courses']),
+    ...mapState(['selectedCourse', 'comments', 'userRating', 'filters', 'courses', 'myCourses']),
     ...mapGetters(['filteredCourses']),
     
     // 搜索结果过滤
@@ -540,6 +570,39 @@ export default {
   methods: {
     ...mapActions(['submitRating', 'updateFilter', 'selectCourse', 'searchCoursesDoc', 'fetchCourseComments']),
     
+    getDayName(day) {
+      const map = {
+        monday: '周一',
+        tuesday: '周二',
+        wednesday: '周三',
+        thursday: '周四',
+        friday: '周五',
+        saturday: '周六',
+        sunday: '周日'
+      }
+      return map[day] || day
+    },
+    getTimeString(slotIndex) {
+      const times = [
+        '08:20-10:00', '10:20-12:00', '14:00-15:40', '15:50-17:30', '19:00-21:35'
+      ]
+      return times[slotIndex] || `第${slotIndex + 1}节`
+    },
+
+    isEnrolled(courseId) {
+      return this.myCourses.some(c => c.id === courseId)
+    },
+
+    async handleEnroll(course) {
+      try {
+        // 传递 course.id 而不是整个 course 对象
+        await this.$store.dispatch('enrollCourse', course.id)
+        alert('选课成功')
+      } catch (error) {
+        alert(error.message)
+      }
+    },
+
     // 加载搜索历史
     loadSearchHistory() {
       try {
@@ -789,28 +852,31 @@ export default {
               courseName: '数据结构',
               credit: 3,
               description: '数据结构是计算机科学的核心课程，介绍各种数据组织方式和算法。',
-              instructor: '张教授'
+              instructor: '张教授',
+              schedule: [{ day: 'monday', timeSlot: 0, location: 'A101' }, { day: 'wednesday', timeSlot: 0, location: 'A101' }]
             },
             {
               courseId: '2',
               courseName: '操作系统',
               credit: 4,
               description: '操作系统是管理计算机硬件和软件资源的系统软件。',
-              instructor: '李教授'
+              instructor: '李教授',
+              schedule: [{ day: 'tuesday', timeSlot: 1, location: 'B203' }, { day: 'thursday', timeSlot: 1, location: 'B203' }]
             },
             {
               courseId: '3',
               courseName: '计算机网络',
               credit: 3,
               description: '计算机网络课程涵盖网络协议、体系结构和网络应用等内容。',
-              instructor: '王教授'
+              instructor: '王教授',
+              schedule: [{ day: 'friday', timeSlot: 2, location: 'C305' }]
             }
           ]
         }
         
         const mapped = coursesList.map(item => {
           // 从原始courses数组中查找匹配的课程，获取完整信息
-          const originalCourse = this.courses.find(c => c.id === item.courseId || c.id === item.id)
+          const originalCourse = this.courses.find(c => c.id == (item.courseId || item.id))
           
           return {
             id: item.courseId || item.id,
@@ -820,7 +886,8 @@ export default {
             rating: parseFloat(item.rating || (originalCourse ? originalCourse.rating : 4.0)),
             credits: item.credit || item.credits || (originalCourse ? originalCourse.credits : 3),
             description: item.description || (originalCourse ? originalCourse.description : '暂无描述'),
-            image: item.image || (originalCourse ? originalCourse.image : '/images/courses/course-placeholder.svg')
+            image: item.image || (originalCourse ? originalCourse.image : '/images/courses/course-placeholder.svg'),
+            schedule: item.schedule || (originalCourse ? originalCourse.schedule : null)
           }
         })
         
@@ -830,6 +897,12 @@ export default {
         console.error('加载课程失败:', e)
         this.$store.commit('SET_ERROR', { title: '加载失败', message: '无法加载课程列表，请稍后重试' })
         
+        // 如果已有课程数据，则不覆盖
+        if (this.courses && this.courses.length > 0) {
+          console.log('保留现有课程数据')
+          return
+        }
+
         // 发生错误时使用模拟数据
         const mockCourses = [
           {
@@ -840,7 +913,8 @@ export default {
             rating: 4.5,
             credits: 3,
             description: '数据结构是计算机科学的核心课程，介绍各种数据组织方式和算法。',
-            image: '/images/courses/course-placeholder.svg'
+            image: '/images/courses/course-placeholder.svg',
+            schedule: [{ day: 'monday', timeSlot: 0, location: 'A101' }, { day: 'wednesday', timeSlot: 0, location: 'A101' }]
           },
           {
             id: '2',
@@ -850,7 +924,8 @@ export default {
             rating: 4.2,
             credits: 4,
             description: '操作系统是管理计算机硬件和软件资源的系统软件。',
-            image: '/images/courses/course-placeholder.svg'
+            image: '/images/courses/course-placeholder.svg',
+            schedule: [{ day: 'tuesday', timeSlot: 1, location: 'B203' }, { day: 'thursday', timeSlot: 1, location: 'B203' }]
           },
           {
             id: '3',
@@ -860,7 +935,8 @@ export default {
             rating: 4.0,
             credits: 3,
             description: '计算机网络课程涵盖网络协议、体系结构和网络应用等内容。',
-            image: '/images/courses/course-placeholder.svg'
+            image: '/images/courses/course-placeholder.svg',
+            schedule: [{ day: 'friday', timeSlot: 2, location: 'C305' }]
           }
         ]
         this.$store.commit('SET_COURSES', mockCourses)

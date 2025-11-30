@@ -150,7 +150,7 @@
           </div>
           <div class="text-sm text-gray-500 mb-3">
             <div v-for="schedule in course.schedule" :key="schedule.day">
-              {{ getDayName(schedule.day) }} {{ schedule.time }} {{ schedule.location }}
+              {{ getDayName(schedule.day) }} {{ getTimeString(schedule.timeSlot) }} {{ schedule.location }}
             </div>
           </div>
           <button 
@@ -184,53 +184,16 @@ export default {
     }
   },
   computed: {
-    ...mapState(['courses']),
+    ...mapState(['courses', 'myCourses']),
     ...mapGetters(['currentUser']),
     selectedCourses() {
-      // 模拟已选课程数据
-      return [
-        {
-          id: 1,
-          title: '计算机科学导论',
-          instructor: '张教授',
-          college: '计算机学院',
-          rating: 4.2,
-          credits: 3,
-          schedule: [
-            { day: 'monday', time: '08:00-09:40', location: 'A101' },
-            { day: 'wednesday', time: '08:00-09:40', location: 'A101' }
-          ]
-        },
-        {
-          id: 2,
-          title: '数据结构与算法',
-          instructor: '李教授',
-          college: '计算机学院',
-          rating: 4.7,
-          credits: 4,
-          schedule: [
-            { day: 'tuesday', time: '10:00-11:40', location: 'B201' },
-            { day: 'thursday', time: '10:00-11:40', location: 'B201' }
-          ]
-        },
-        {
-          id: 3,
-          title: '宏观经济学',
-          instructor: '王教授',
-          college: '经济学院',
-          rating: 3.5,
-          credits: 2,
-          schedule: [
-            { day: 'friday', time: '14:00-15:40', location: 'C301' }
-          ]
-        }
-      ]
+      return this.myCourses
     },
     totalCredits() {
       return this.selectedCourses.reduce((total, course) => total + course.credits, 0)
     },
     weeklyClasses() {
-      return this.selectedCourses.reduce((total, course) => total + course.schedule.length, 0)
+      return this.selectedCourses.reduce((total, course) => total + (course.schedule ? course.schedule.length : 0), 0)
     },
     averageRating() {
       if (this.selectedCourses.length === 0) return 0
@@ -240,11 +203,18 @@ export default {
   },
   methods: {
     getCourseAtTime(day, time) {
+      // 找到对应时间段的索引
+      const timeSlotIndex = this.timeSlots.findIndex(slot => slot.time === time)
+      if (timeSlotIndex === -1) return []
+
       return this.selectedCourses.filter(course => 
-        course.schedule.some(schedule => 
-          schedule.day === day && schedule.time === time
+        course.schedule && course.schedule.some(schedule => 
+          schedule.day === day && schedule.timeSlot === timeSlotIndex
         )
       )
+    },
+    getTimeString(index) {
+      return this.timeSlots[index] ? this.timeSlots[index].time : ''
     },
     getDayName(day) {
       const dayNames = {
@@ -262,11 +232,14 @@ export default {
       this.$store.commit('SET_SELECTED_COURSE', course)
       this.$router.push('/courses')
     },
-    dropCourse(courseId) {
+    async dropCourse(courseId) {
       if (confirm('确定要退选这门课程吗？')) {
-        // 这里应该调用退选API
-        console.log('退选课程:', courseId)
-        alert('退选成功！')
+        try {
+          await this.$store.dispatch('dropCourse', courseId)
+          // alert('退选成功！') // 既然界面会响应式更新，就不必弹窗了，或者可以用toast
+        } catch (error) {
+          alert(error.message)
+        }
       }
     },
     previousWeek() {
@@ -282,3 +255,4 @@ export default {
   }
 }
 </script>
+

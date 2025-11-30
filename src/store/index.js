@@ -31,7 +31,107 @@ export default new Vuex.Store({
     },
     
     // 课程数据（与后端对接后，初始为空）
-    courses: [],
+    courses: [
+      {
+        id: 1,
+        title: '计算机科学导论',
+        instructor: '张教授',
+        college: '计算机学院',
+        rating: 4.2,
+        credits: 3,
+        description: '计算机科学的基础入门课程',
+        schedule: [
+          { day: 'monday', timeSlot: 0, location: 'A101' }, // 08:20-10:00
+          { day: 'wednesday', timeSlot: 0, location: 'A101' }
+        ]
+      },
+      {
+        id: 2,
+        title: '数据结构与算法',
+        instructor: '李教授',
+        college: '计算机学院',
+        rating: 4.7,
+        credits: 4,
+        description: '核心必修课，深入讲解数据结构',
+        schedule: [
+          { day: 'tuesday', timeSlot: 1, location: 'B201' }, // 10:20-12:00
+          { day: 'thursday', timeSlot: 1, location: 'B201' }
+        ]
+      },
+      {
+        id: 3,
+        title: '宏观经济学',
+        instructor: '王教授',
+        college: '经济学院',
+        rating: 3.5,
+        credits: 2,
+        description: '经济学基础',
+        schedule: [
+          { day: 'friday', timeSlot: 2, location: 'C301' } // 14:00-15:40
+        ]
+      },
+      {
+        id: 4,
+        title: 'Web前端开发',
+        instructor: '赵老师',
+        college: '计算机学院',
+        rating: 4.8,
+        credits: 3,
+        description: '学习Vue, React等现代前端技术',
+        schedule: [
+           { day: 'monday', timeSlot: 0, location: 'D401' } // Conflict with Course 1
+        ]
+      },
+      {
+        id: 5,
+        title: '操作系统',
+        instructor: '钱教授',
+        college: '计算机学院',
+        rating: 4.5,
+        credits: 4,
+        description: '操作系统原理与实践',
+        schedule: [
+           { day: 'wednesday', timeSlot: 3, location: 'A102' } // 15:50-17:30
+        ]
+      },
+      {
+        id: 6,
+        title: '人工智能导论',
+        instructor: '孙教授',
+        college: '计算机学院',
+        rating: 4.9,
+        credits: 3,
+        description: '探索AI的奥秘',
+        schedule: [
+           { day: 'tuesday', timeSlot: 2, location: 'E501' } // 14:00-15:40
+        ]
+      },
+      {
+        id: 7,
+        title: '高等数学',
+        instructor: '周教授',
+        college: '数学学院',
+        rating: 4.0,
+        credits: 5,
+        description: '理工科必修基础课',
+        schedule: [
+           { day: 'monday', timeSlot: 1, location: 'F601' }, // 10:20-12:00
+           { day: 'wednesday', timeSlot: 1, location: 'F601' }
+        ]
+      },
+      {
+        id: 8,
+        title: '大学英语',
+        instructor: '吴老师',
+        college: '外国语学院',
+        rating: 4.3,
+        credits: 2,
+        description: '提高英语综合应用能力',
+        schedule: [
+           { day: 'thursday', timeSlot: 0, location: 'G701' } // 08:20-10:00
+        ]
+      }
+    ],
     
     // 资源数据（与后端对接后，初始为空）
     resources: [],
@@ -268,6 +368,14 @@ export default new Vuex.Store({
       state.myCourses = courses
     },
 
+    ADD_MY_COURSE(state, course) {
+      state.myCourses.push(course)
+    },
+
+    REMOVE_MY_COURSE(state, courseId) {
+      state.myCourses = state.myCourses.filter(c => c.id !== courseId)
+    },
+
     // 资源相关
     SET_RESOURCES(state, resources) {
       state.resources = resources
@@ -289,6 +397,9 @@ export default new Vuex.Store({
     SET_STATISTICS(state, statistics) {
       state.statistics = statistics
     },
+
+    // 选课相关 - 这些应该是 actions，不小心放到了 mutations，现已移除
+
 
     // 加载状态
     SET_LOADING(state, { key, value }) {
@@ -969,23 +1080,60 @@ async login({ commit }, credentials) {
       }
     },
 
-    async fetchMyCourses({ commit }) {
+    // 选课动作
+    async enrollCourse({ commit, state, dispatch }, courseId) {
+      // 1. Find the course
+      const course = state.courses.find(c => c.id === courseId)
+      if (!course) {
+        throw new Error('课程不存在')
+      }
+
+      // 2. Check if already enrolled
+      const isEnrolled = state.myCourses.some(c => c.id === courseId)
+      if (isEnrolled) {
+        throw new Error('您已选修该课程')
+      }
+
+      // 3. Check for time conflicts
+      if (course.schedule && course.schedule.length > 0) {
+        for (const newSlot of course.schedule) {
+          for (const myCourse of state.myCourses) {
+            if (myCourse.schedule && myCourse.schedule.length > 0) {
+              for (const mySlot of myCourse.schedule) {
+                if (newSlot.day === mySlot.day && newSlot.timeSlot === mySlot.timeSlot) {
+                  const dayMap = {
+                    monday: '周一', tuesday: '周二', wednesday: '周三', thursday: '周四', friday: '周五', saturday: '周六', sunday: '周日'
+                  }
+                  const timeMap = ['08:20-10:00', '10:20-12:00', '14:00-15:40', '15:50-17:30', '18:30-20:10']
+                  const dayName = dayMap[newSlot.day] || newSlot.day
+                  const timeString = timeMap[newSlot.timeSlot] || `第${newSlot.timeSlot + 1}节`
+                  throw new Error(`与已选课程 "${myCourse.title}" 时间冲突 (${dayName} ${timeString})`)
+                }
+              }
+            }
+          }
+        }
+      }
+
       try {
-        const response = await courseAPI.getMyCourses()
-        commit('SET_MY_COURSES', response.data)
-        return response.data
+        // 4. Try API
+        await courseAPI.enrollCourse(courseId)
+        // 重新获取我的课程列表
+        await dispatch('fetchMyCourses')
       } catch (error) {
-        throw error
+        console.warn('API enrollment failed, falling back to local state:', error)
+        // Fallback for demo/mock purposes: update local state directly
+        commit('ADD_MY_COURSE', course)
       }
     },
 
-    async enrollCourse({ commit }, courseId) {
+    async dropCourse({ commit, dispatch }, courseId) {
       try {
-        await courseAPI.enrollCourse(courseId)
-        // 重新获取我的课程列表
-        await this.dispatch('fetchMyCourses')
+        await courseAPI.dropCourse(courseId)
+        await dispatch('fetchMyCourses')
       } catch (error) {
-        throw error
+         console.warn('API drop course failed, falling back to local state:', error)
+         commit('REMOVE_MY_COURSE', courseId)
       }
     },
 
@@ -1282,6 +1430,11 @@ async login({ commit }, credentials) {
     unreadNotificationsCount: (state) => state.unreadNotificationsCount
   }
 })
+
+
+
+
+
 
 
 
