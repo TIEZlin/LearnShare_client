@@ -9,7 +9,7 @@ const api = axios.create({
 // 请求拦截器 - 添加认证token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = sessionStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -26,8 +26,8 @@ api.interceptors.response.use(
     // 检查响应头中是否有token
     const token = response.headers['authorization'] || response.headers['x-auth-token'] || response.headers['access-token'];
     if (token) {
-      // 如果有token，保存到localStorage中
-      localStorage.setItem('token', token.replace('Bearer ', ''));
+      // 如果有token，保存到sessionStorage中
+      sessionStorage.setItem('token', token.replace('Bearer ', ''));
     }
     
     // 返回完整的响应对象，而不仅仅是response.data
@@ -46,8 +46,8 @@ api.interceptors.response.use(
     
     // 处理认证错误
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
       // 不要直接跳转，让应用自己处理
       // window.location.href = '/login'
     }
@@ -73,3 +73,4 @@ export { uploadAPI } from './upload'
 export { notificationAPI } from './notification'
 export { searchAPI } from './search'
 export { statsAPI } from './stats'
+

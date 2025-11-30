@@ -12,7 +12,7 @@ export default new Vuex.Store({
     // 认证状态
     isAuthenticated: false,
     currentUser: null,
-    token: localStorage.getItem('token') || null,
+    token: sessionStorage.getItem('token') || null,
     
     // 用户信息
     user: {
@@ -138,28 +138,28 @@ export default new Vuex.Store({
   
   mutations: {
     // 认证相关
-  SET_AUTH(state, { user, token }) {
-  state.isAuthenticated = true
-  state.currentUser = user
-  state.token = token
-  // 只有当token存在时才保存到localStorage
-  if (token) {
-    localStorage.setItem('token', token)
-  }
-  localStorage.setItem('user', JSON.stringify(user))
-},
+    SET_AUTH(state, { user, token }) {
+      state.isAuthenticated = true
+      state.currentUser = user
+      state.token = token
+      // 只有当token存在时才保存到sessionStorage
+      if (token) {
+        sessionStorage.setItem('token', token)
+      }
+      sessionStorage.setItem('user', JSON.stringify(user))
+    },
     
     CLEAR_AUTH(state) {
       state.isAuthenticated = false
       state.currentUser = null
       state.token = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
     },
     
     INIT_AUTH(state) {
-      const token = localStorage.getItem('token')
-      const user = localStorage.getItem('user')
+      const token = sessionStorage.getItem('token')
+      const user = sessionStorage.getItem('user')
       if (token && user) {
         state.isAuthenticated = true
         state.currentUser = JSON.parse(user)
@@ -1282,5 +1282,6 @@ async login({ commit }, credentials) {
     unreadNotificationsCount: (state) => state.unreadNotificationsCount
   }
 })
+
 
 

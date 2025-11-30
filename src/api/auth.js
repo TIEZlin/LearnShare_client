@@ -14,65 +14,6 @@ export const authAPI = {
    * @returns {Promise} 登录结果Promise
    */
   login(credentials) {
-    const identity = credentials?.email || credentials?.username || ''
-    const password = credentials?.password || ''
-    const mockFlag = String(import.meta?.env?.VITE_USE_MOCK_AUTH || '').toLowerCase()
-    const useMockEnv = mockFlag === 'true' || mockFlag === '1' || mockFlag === 'yes'
-    const localUser = findLocalUserByIdentity(identity)
-
-    // 模拟登录：环境变量开启 或 使用本地账号
-    if (useMockEnv || localUser) {
-      const now = Date.now()
-      const userData = localUser || {
-        // 未匹配到具体本地账号时，给出演示用户
-        email: identity,
-        username: 'Demo User',
-        roleId: 2,
-        userId: 20000,
-        collegeId: 100,
-        majorId: 200,
-        avatarUrl: '',
-        reputationScore: 70,
-        status: 'active'
-      }
-
-      // 若本地账号设定了密码且传入密码不匹配，则返回模拟的错误响应
-      if (localUser && localUser.password && password && password !== localUser.password) {
-        return Promise.reject({
-          response: {
-            status: 400,
-            data: { baseResponse: { code: 40000, message: '邮箱或密码错误' } }
-          }
-        })
-      }
-
-      const token = `mock-token-${userData.roleId === 1 ? 'admin' : 'user'}-${userData.userId}-${now}`
-      const mockUser = {
-        userId: userData.userId,
-        username: userData.username,
-        email: userData.email,
-        collegeId: userData.collegeId,
-        majorId: userData.majorId,
-        avatarUrl: userData.avatarUrl,
-        reputationScore: userData.reputationScore,
-        roleId: userData.roleId,
-        status: userData.status,
-        createdAt: now,
-        updatedAt: now
-      }
-
-      return Promise.resolve({
-        data: {
-          baseResponse: { code: 10000, message: 'OK' },
-          user: mockUser,
-          token
-        },
-        headers: {
-          authorization: `Bearer ${token}`
-        }
-      })
-    }
-
     return api.post('/auth/login', credentials)
   },
   
