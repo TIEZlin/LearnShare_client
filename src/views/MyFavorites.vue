@@ -1,24 +1,24 @@
 <template>
   <div class="container mx-auto px-6 py-8">
     <div class="flex items-center mb-6">
-      <button @click="$router.back()" class="mr-4 p-2 hover:bg-gray-100 rounded-full">
-        <span class="iconify text-xl" data-icon="mdi:arrow-left"></span>
+      <button @click="$router.back()" class="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+        <span class="iconify text-xl dark:text-gray-200" data-icon="mdi:arrow-left"></span>
       </button>
-      <h1 class="text-2xl font-bold text-gray-800">我的收藏</h1>
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">我的收藏</h1>
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white rounded-lg shadow-sm mb-6">
-      <div class="flex border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6 transition-colors duration-300">
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
         <button 
           @click="activeTab = 'courses'"
-          :class="['px-6 py-3 font-medium focus:outline-none', activeTab === 'courses' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700']"
+          :class="['px-6 py-3 font-medium focus:outline-none transition-colors', activeTab === 'courses' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200']"
         >
           收藏的课程
         </button>
         <button 
           @click="activeTab = 'resources'"
-          :class="['px-6 py-3 font-medium focus:outline-none', activeTab === 'resources' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700']"
+          :class="['px-6 py-3 font-medium focus:outline-none transition-colors', activeTab === 'resources' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200']"
         >
           收藏的资源
         </button>
@@ -28,53 +28,53 @@
     <!-- Content -->
     <div v-if="activeTab === 'courses'">
       <div v-if="favoriteCourses.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="course in favoriteCourses" :key="course.id" class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer" @click="goToCourse(course.id)">
-          <div class="h-40 bg-gray-200 relative">
-            <img :src="course.image || 'https://via.placeholder.com/400x200'" class="w-full h-full object-cover" alt="Course cover">
-            <div class="absolute top-2 right-2 bg-white p-1 rounded-full shadow cursor-pointer hover:bg-red-50" @click.stop="removeFavoriteCourse(course.id)">
+        <div v-for="course in favoriteCourses" :key="course.id" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer" @click="goToCourse(course.id)">
+          <div class="h-40 bg-gray-200 dark:bg-gray-700 relative">
+            <img :src="course.image || 'https://via.placeholder.com/400x200'" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" alt="Course cover">
+            <div class="absolute top-2 right-2 bg-white dark:bg-gray-800 p-1 rounded-full shadow cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30" @click.stop="removeFavoriteCourse(course.id)">
                <span class="iconify text-red-500" data-icon="mdi:heart"></span>
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-bold text-lg mb-1 truncate">{{ course.title }}</h3>
-            <p class="text-sm text-gray-500 mb-2">{{ course.college }}</p>
+            <h3 class="font-bold text-lg mb-1 truncate dark:text-white">{{ course.title }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ course.college }}</p>
             <div class="flex justify-between items-center mt-4">
-              <span class="text-blue-600 text-sm font-medium hover:underline">查看详情</span>
+              <span class="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline">查看详情</span>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="text-center py-12 bg-white rounded-lg shadow-sm">
-        <span class="iconify text-6xl text-gray-300 mb-4 mx-auto block" data-icon="mdi:book-open-page-variant"></span>
-        <p class="text-gray-500">您还没有收藏任何课程</p>
-        <router-link to="/courses" class="mt-4 inline-block text-blue-600 hover:underline">去浏览课程</router-link>
+      <div v-else class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-300">
+        <span class="iconify text-6xl text-gray-300 dark:text-gray-600 mb-4 mx-auto block" data-icon="mdi:book-open-page-variant"></span>
+        <p class="text-gray-500 dark:text-gray-400">您还没有收藏任何课程</p>
+        <router-link to="/courses" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">去浏览课程</router-link>
       </div>
     </div>
 
     <div v-if="activeTab === 'resources'">
-      <div v-if="favoriteResources.length > 0" class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div v-for="(resource, index) in favoriteResources" :key="resource.id" :class="['p-4 flex items-center hover:bg-gray-50 cursor-pointer', index !== favoriteResources.length - 1 ? 'border-b border-gray-100' : '']" @click="goToResource(resource.id)">
-          <div class="bg-blue-100 p-3 rounded mr-4">
-             <span class="iconify text-blue-600 text-xl" :data-icon="getFileIcon(resource.type)"></span>
+      <div v-if="favoriteResources.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden transition-colors duration-300">
+        <div v-for="(resource, index) in favoriteResources" :key="resource.id" :class="['p-4 flex items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors', index !== favoriteResources.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : '']" @click="goToResource(resource.id)">
+          <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded mr-4">
+             <span class="iconify text-blue-600 dark:text-blue-400 text-xl" :data-icon="getFileIcon(resource.type)"></span>
           </div>
           <div class="flex-1">
-            <h4 class="font-bold text-gray-800 hover:text-blue-600">{{ resource.title }}</h4>
-            <p class="text-sm text-gray-500">{{ resource.course }} · {{ resource.size }} · {{ resource.date }}</p>
+            <h4 class="font-bold text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">{{ resource.title }}</h4>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ resource.course }} · {{ resource.size }} · {{ resource.date }}</p>
           </div>
           <div class="flex items-center" @click.stop>
-             <button class="text-gray-400 hover:text-red-500 mr-4" @click="removeFavoriteResource(resource.id)" title="取消收藏">
+             <button class="text-gray-400 hover:text-red-500 mr-4 transition-colors" @click="removeFavoriteResource(resource.id)" title="取消收藏">
                <span class="iconify text-xl" data-icon="mdi:heart"></span>
              </button>
-             <button class="text-blue-600 hover:text-blue-800">
+             <button class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
                <span class="iconify text-xl" data-icon="mdi:download"></span>
              </button>
           </div>
         </div>
       </div>
-      <div v-else class="text-center py-12 bg-white rounded-lg shadow-sm">
-        <span class="iconify text-6xl text-gray-300 mb-4 mx-auto block" data-icon="mdi:file-document-multiple"></span>
-        <p class="text-gray-500">您还没有收藏任何资源</p>
-        <router-link to="/resources" class="mt-4 inline-block text-blue-600 hover:underline">去浏览资源</router-link>
+      <div v-else class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-300">
+        <span class="iconify text-6xl text-gray-300 dark:text-gray-600 mb-4 mx-auto block" data-icon="mdi:file-document-multiple"></span>
+        <p class="text-gray-500 dark:text-gray-400">您还没有收藏任何资源</p>
+        <router-link to="/resources" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">去浏览资源</router-link>
       </div>
     </div>
   </div>

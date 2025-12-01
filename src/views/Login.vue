@@ -13,17 +13,17 @@
           class="w-20 h-20 mx-auto mb-4"
           @error="handleLogoError"
         />
-        <h2 class="text-3xl font-bold text-gray-900">智慧选课平台</h2>
-        <p class="mt-2 text-sm text-gray-600">请登录您的账户</p>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">智慧选课平台</h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">请登录您的账户</p>
       </div>
 
       
       <!-- 登录表单 -->
-      <div class="bg-white bg-opacity-95 backdrop-blur-sm card p-8 shadow-2xl">
+      <div class="bg-white dark:bg-gray-800 bg-opacity-95 dark:bg-opacity-95 backdrop-blur-sm card p-8 shadow-2xl transition-colors duration-300">
         <form @submit.prevent="handleLogin" class="space-y-6">
           <!-- 邮箱输入 -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
               邮箱
             </label>
             <input
@@ -31,14 +31,14 @@
               v-model="loginForm.email"
               type="email"
               required
-              class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
               placeholder="请输入邮箱地址"
             />
           </div>
 
           <!-- 密码输入 -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
               密码
             </label>
             <div class="relative">
@@ -47,7 +47,7 @@
                 v-model="loginForm.password"
                 :type="showPassword ? 'text' : 'password'"
                 required
-                class="w-full border border-gray-300 rounded-md py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
                 placeholder="请输入密码"
               />
               <button
@@ -56,7 +56,7 @@
                 class="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 <span 
-                  class="iconify text-gray-400 hover:text-gray-600"
+                  class="iconify text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-300"
                   :data-icon="showPassword ? 'mdi:eye-off' : 'mdi:eye'"
                 ></span>
               </button>
@@ -70,14 +70,14 @@
                 id="remember-me"
                 v-model="loginForm.rememberMe"
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 transition-colors duration-300"
               />
-              <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+              <label for="remember-me" class="ml-2 block text-sm text-gray-700 dark:text-gray-300 transition-colors duration-300">
                 记住我
               </label>
             </div>
             <div class="text-sm">
-              <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+              <a href="#" class="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300">
                 忘记密码？
               </a>
             </div>
@@ -88,7 +88,7 @@
             <button
               type="submit"
               :disabled="isLoading"
-              class="w-full btn-primary py-3 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full btn-primary py-3 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               <span v-if="isLoading" class="flex items-center justify-center">
                 <span class="iconify animate-spin mr-2" data-icon="mdi:loading"></span>

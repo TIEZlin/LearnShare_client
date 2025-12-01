@@ -3,7 +3,7 @@
     <!-- 铃铛图标 -->
     <button 
       @click="toggleDropdown" 
-      class="relative p-2 text-gray-600 hover:text-blue-600 focus:outline-none transition-colors duration-200"
+      class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors duration-200"
     >
       <span class="iconify w-6 h-6" data-icon="mdi:bell-outline"></span>
       <!-- 未读角标 -->
@@ -18,15 +18,15 @@
     <!-- 下拉列表 -->
     <div 
       v-if="isOpen" 
-      class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-100 overflow-hidden"
+      class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors"
     >
       <!-- 头部 -->
-      <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-        <h3 class="text-sm font-semibold text-gray-700">通知</h3>
+      <div class="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center transition-colors">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">通知</h3>
         <button 
           v-if="unreadCount > 0"
           @click="markAllRead" 
-          class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+          class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
         >
           全部已读
         </button>
@@ -34,7 +34,7 @@
 
       <!-- 列表内容 -->
       <div class="max-h-96 overflow-y-auto custom-scrollbar">
-        <div v-if="loading" class="py-8 text-center text-gray-500">
+        <div v-if="loading" class="py-8 text-center text-gray-500 dark:text-gray-400">
           <span class="iconify animate-spin w-5 h-5 mx-auto mb-2" data-icon="mdi:loading"></span>
           <p class="text-xs">加载中...</p>
         </div>
@@ -43,23 +43,23 @@
           <div 
             v-for="notification in notifications" 
             :key="notification.id"
-            class="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150 relative group"
-            :class="{ 'bg-blue-50/30': !notification.isRead }"
+            class="px-4 py-3 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 relative group"
+            :class="{ 'bg-blue-50/30 dark:bg-blue-900/20': !notification.isRead }"
           >
             <div class="flex justify-between items-start mb-1">
-              <h4 class="text-sm font-medium text-gray-800 line-clamp-1 w-3/4" :class="{ 'font-bold': !notification.isRead }">
+              <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-1 w-3/4" :class="{ 'font-bold': !notification.isRead }">
                 {{ notification.title }}
               </h4>
-              <span class="text-xs text-gray-400 whitespace-nowrap ml-2">{{ formatDate(notification.createdAt) }}</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2">{{ formatDate(notification.createdAt) }}</span>
             </div>
-            <p class="text-xs text-gray-600 line-clamp-2 mb-2">{{ notification.content }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">{{ notification.content }}</p>
             
             <!-- 操作按钮 -->
             <div class="flex justify-end space-x-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                <button 
                 v-if="!notification.isRead"
                 @click.stop="markRead(notification.id)" 
-                class="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
                 title="标记已读"
               >
                 <span class="iconify mr-1" data-icon="mdi:check"></span>
@@ -67,7 +67,7 @@
               </button>
               <button 
                 @click.stop="removeNotification(notification.id)" 
-                class="text-xs text-red-500 hover:text-red-700 flex items-center"
+                class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center"
                 title="删除"
               >
                 <span class="iconify mr-1" data-icon="mdi:delete-outline"></span>
@@ -81,8 +81,8 @@
         </template>
 
         <!-- 空状态 -->
-        <div v-else class="py-8 text-center text-gray-500">
-          <span class="iconify w-8 h-8 mx-auto mb-2 text-gray-300" data-icon="mdi:bell-off-outline"></span>
+        <div v-else class="py-8 text-center text-gray-500 dark:text-gray-400">
+          <span class="iconify w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" data-icon="mdi:bell-off-outline"></span>
           <p class="text-xs">暂无通知</p>
         </div>
       </div>

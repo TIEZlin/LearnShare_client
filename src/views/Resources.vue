@@ -1,13 +1,13 @@
 <template>
   <div class="px-8 py-6">
     <!-- 资源筛选和上传 -->
-    <div class="bg-white card p-5 mb-8">
-      <h2 class="text-xl font-bold mb-4">资源筛选</h2>
+    <div class="bg-white dark:bg-gray-800 card p-5 mb-8 transition-colors duration-300">
+      <h2 class="text-xl font-bold mb-4 dark:text-white">资源筛选</h2>
       <div class="grid grid-cols-5 gap-4 items-end">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">课程</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">课程</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="selectedCourseTitle"
             @change="onCourseFilterChange"
           >
@@ -16,9 +16,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">类型</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="selectedType"
             @change="onTypeFilterChange"
           >
@@ -30,9 +30,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">评分</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">评分</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="selectedRating"
             @change="onRatingFilterChange"
           >
@@ -56,7 +56,7 @@
 
     <!-- 热门资源推荐 -->
     <div class="mb-8">
-      <h2 class="text-xl font-bold mb-4">热门资源</h2>
+      <h2 class="text-xl font-bold mb-4 dark:text-white">热门资源</h2>
       <div class="custom-grid">
         <ResourceCard 
           v-for="resource in hotResources" 
@@ -68,10 +68,10 @@
     </div>
 
     <!-- 全部资源列表 -->
-    <h2 class="text-xl font-bold mb-4">全部资源</h2>
+    <h2 class="text-xl font-bold mb-4 dark:text-white">全部资源</h2>
     
     <!-- 空状态与重试 -->
-    <div v-if="filteredResources.length === 0" class="card p-8 text-center text-gray-600 mb-8">
+    <div v-if="filteredResources.length === 0" class="card p-8 text-center text-gray-600 dark:text-gray-400 mb-8">
       <p class="mb-4">暂无资源数据或加载失败。</p>
       <button class="btn-primary" @click="onSearchDoc">重试加载</button>
     </div>
@@ -93,15 +93,15 @@
               :data-icon="getTypeIcon(resource.type)"
             ></span>
           </div>
-          <h3 class="font-bold">{{ resource.title }}</h3>
+          <h3 class="font-bold dark:text-white">{{ resource.title }}</h3>
         </div>
-        <p class="text-sm text-gray-600 mb-3">{{ resource.course }} · {{ resource.semester }}</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ resource.course }} · {{ resource.semester }}</p>
         <div class="flex justify-between mt-auto">
           <div class="flex items-center text-sm">
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-6 h-6 mr-2"></div>
-            <span>{{ resource.author }}</span>
+            <div class="bg-gray-200 dark:bg-gray-600 border-2 border-dashed border-gray-300 dark:border-gray-500 rounded-xl w-6 h-6 mr-2"></div>
+            <span class="dark:text-gray-300">{{ resource.author }}</span>
           </div>
-          <div class="flex items-center text-sm text-gray-500">
+          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
             <div class="star-rating flex mr-2">
               <span 
                 v-for="star in 5" 
@@ -125,7 +125,7 @@
           >下载</button>
         </div>
         <button 
-          class="btn-danger w-full mt-2 text-xs"
+          class="w-full mt-2 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
           @click="onReport(resource)"
         >举报</button>
       </div>
@@ -226,23 +226,23 @@ export default {
     },
     getTypeClass(type) {
       const classes = {
-        pdf: 'bg-blue-100',
-        word: 'bg-orange-100',
-        presentation: 'bg-purple-100',
-        excel: 'bg-green-100',
-        powerpoint: 'bg-yellow-100'
+        pdf: 'bg-blue-100 dark:bg-blue-900/30',
+        word: 'bg-orange-100 dark:bg-orange-900/30',
+        presentation: 'bg-purple-100 dark:bg-purple-900/30',
+        excel: 'bg-green-100 dark:bg-green-900/30',
+        powerpoint: 'bg-yellow-100 dark:bg-yellow-900/30'
       }
-      return classes[type] || 'bg-gray-100'
+      return classes[type] || 'bg-gray-100 dark:bg-gray-700'
     },
     getTypeColor(type) {
       const colors = {
-        pdf: 'text-blue-500',
-        word: 'text-orange-500',
-        presentation: 'text-purple-500',
-        excel: 'text-green-500',
-        powerpoint: 'text-yellow-500'
+        pdf: 'text-blue-500 dark:text-blue-400',
+        word: 'text-orange-500 dark:text-orange-400',
+        presentation: 'text-purple-500 dark:text-purple-400',
+        excel: 'text-green-500 dark:text-green-400',
+        powerpoint: 'text-yellow-500 dark:text-yellow-400'
       }
-      return colors[type] || 'text-gray-500'
+      return colors[type] || 'text-gray-500 dark:text-gray-400'
     },
     getTypeIcon(type) {
       const icons = {
@@ -262,3 +262,4 @@ export default {
 }
 </script>
 
+

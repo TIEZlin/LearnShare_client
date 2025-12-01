@@ -27,11 +27,11 @@
               ></span>
             </div>
             <div>
-              <h1 class="text-2xl font-bold mb-1">{{ selectedResource.title }}</h1>
-              <p class="text-gray-600">{{ selectedResource.course }} · {{ selectedResource.semester }}</p>
+              <h1 class="text-2xl font-bold mb-1 dark:text-white">{{ selectedResource.title }}</h1>
+              <p class="text-gray-600 dark:text-gray-400">{{ selectedResource.course }} · {{ selectedResource.semester }}</p>
             </div>
           </div>
-          <div class="flex justify-between text-sm mb-4">
+          <div class="flex justify-between text-sm mb-4 text-gray-600 dark:text-gray-400">
             <span>作者：{{ selectedResource.author }}</span>
             <div class="flex items-center">
               <span class="iconify mr-1" data-icon="mdi:download"></span>
@@ -48,13 +48,13 @@
                 data-icon="mdi:star"
               ></span>
             </div>
-            <span class="text-sm text-gray-600">{{ selectedResource.rating }}</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ selectedResource.rating }}</span>
           </div>
         </div>
 
         <!-- 新增：资源操作 + 文件信息 -->
         <div class="card p-6 mt-6">
-          <h3 class="text-lg font-bold mb-3">资源操作</h3>
+          <h3 class="text-lg font-bold mb-3 dark:text-white">资源操作</h3>
           <div class="flex space-x-2 mb-4">
             <button class="btn-primary flex items-center" @click="downloadResource">
               <span class="iconify mr-2" data-icon="mdi:download"></span>
@@ -66,8 +66,8 @@
             </button>
           </div>
 
-          <h3 class="text-lg font-bold mb-3">文件信息</h3>
-          <ul class="space-y-2 text-sm text-gray-700">
+          <h3 class="text-lg font-bold mb-3 dark:text-white">文件信息</h3>
+          <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:file"></span> 类型：{{ selectedResource.type }}</li>
             <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:book-education"></span> 课程：{{ selectedResource.course }}</li>
             <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:calendar"></span> 学期：{{ selectedResource.semester }}</li>
@@ -79,20 +79,20 @@
 
         <!-- 新增：相关资源 -->
         <div class="card p-6 mt-6">
-          <h3 class="text-lg font-bold mb-3">相关资源</h3>
+          <h3 class="text-lg font-bold mb-3 dark:text-white">相关资源</h3>
           <div class="space-y-3">
             <div 
               v-for="res in relatedResources" 
               :key="res.id" 
-              class="flex items-center justify-between border border-gray-100 rounded p-2"
+              class="flex items-center justify-between border border-gray-100 dark:border-gray-700 rounded p-2"
             >
               <div>
-                <div class="text-sm font-medium">{{ res.title }}</div>
-                <div class="text-xs text-gray-500">{{ res.course }} · {{ res.semester }}</div>
+                <div class="text-sm font-medium dark:text-white">{{ res.title }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ res.course }} · {{ res.semester }}</div>
               </div>
               <button class="btn-secondary text-xs" @click="openResource(res)">查看详情</button>
             </div>
-            <div v-if="relatedResources.length === 0" class="text-sm text-gray-500">暂无相关资源</div>
+            <div v-if="relatedResources.length === 0" class="text-sm text-gray-500 dark:text-gray-400">暂无相关资源</div>
           </div>
         </div>
       </div>
@@ -100,11 +100,11 @@
       <!-- 右侧评分和评论 -->
       <div class="col-span-2">
         <div class="card p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4">资源评分</h2>
+          <h2 class="text-xl font-bold mb-4 dark:text-white">资源评分</h2>
           <div class="mb-6">
-            <h3 class="font-bold mb-3">您的评价</h3>
+            <h3 class="font-bold mb-3 dark:text-white">您的评价</h3>
             <div class="mb-4">
-              <label class="block text-gray-700 mb-2">评分</label>
+              <label class="block text-gray-700 dark:text-gray-300 mb-2">评分</label>
               <div class="star-rating flex space-x-1">
                 <span
                   v-for="star in 5"
@@ -120,9 +120,9 @@
               </div>
             </div>
             <div class="mb-4">
-              <label class="block text-gray-700 mb-2">评论</label>
+              <label class="block text-gray-700 dark:text-gray-300 mb-2">评论</label>
               <textarea 
-                class="w-full border border-gray-300 rounded-md p-3 h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300"
                 v-model="resourceUserRating.comment"
                 placeholder="请输入您的评价..."
               ></textarea>
@@ -132,7 +132,7 @@
 
           <!-- 评论列表 -->
           <div class="card p-6">
-            <h2 class="text-xl font-bold mb-4">用户评价（{{ resourceComments.length }}条）</h2>
+            <h2 class="text-xl font-bold mb-4 dark:text-white">用户评价（{{ resourceComments.length }}条）</h2>
             <div 
               v-for="comment in resourceComments" 
               :key="comment.id"
@@ -140,9 +140,9 @@
             >
               <div class="flex items-start justify-between mb-2">
                 <div class="flex items-center">
-                  <div class="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10 mr-3"></div>
+                  <div class="bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl w-10 h-10 mr-3"></div>
                   <div>
-                    <h4 class="font-bold">{{ comment.author }}</h4>
+                    <h4 class="font-bold dark:text-white">{{ comment.author }}</h4>
                     <div class="flex items-center">
                       <div class="star-rating flex mr-2">
                         <span 
@@ -153,14 +153,14 @@
                           data-icon="mdi:star"
                         ></span>
                       </div>
-                      <span class="text-gray-500 text-sm">{{ comment.date }}</span>
+                      <span class="text-gray-500 dark:text-gray-400 text-sm">{{ comment.date }}</span>
                     </div>
                   </div>
                 </div>
                 <!-- 点赞按钮（右侧） -->
                 <button
-                  class="inline-flex items-center space-x-1 px-2 py-1 rounded hover:bg-blue-50 transition transform active:scale-95"
-                  :class="comment.liked ? 'text-blue-600' : 'text-gray-600'"
+                  class="inline-flex items-center space-x-1 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition transform active:scale-95"
+                  :class="comment.liked ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"
                   @click="toggleResourceCommentLike(comment)"
                   :aria-label="comment.liked ? '取消点赞' : '点赞'"
                 >
@@ -168,7 +168,7 @@
                   <span>{{ comment.likes || 0 }}</span>
                 </button>
               </div>
-              <p class="text-gray-700">{{ comment.content }}</p>
+              <p class="text-gray-700 dark:text-gray-300">{{ comment.content }}</p>
             </div>
           </div>
         </div>
@@ -240,23 +240,23 @@ export default {
     },
     getTypeClass(type) {
       const classes = {
-        pdf: 'bg-blue-100',
-        word: 'bg-orange-100',
-        presentation: 'bg-purple-100',
-        excel: 'bg-green-100',
-        powerpoint: 'bg-yellow-100'
+        pdf: 'bg-blue-100 dark:bg-blue-900/30',
+        word: 'bg-orange-100 dark:bg-orange-900/30',
+        presentation: 'bg-purple-100 dark:bg-purple-900/30',
+        excel: 'bg-green-100 dark:bg-green-900/30',
+        powerpoint: 'bg-yellow-100 dark:bg-yellow-900/30'
       }
-      return classes[type] || 'bg-gray-100'
+      return classes[type] || 'bg-gray-100 dark:bg-gray-700'
     },
     getTypeColor(type) {
       const colors = {
-        pdf: 'text-blue-600',
-        word: 'text-orange-500',
-        presentation: 'text-purple-600',
-        excel: 'text-green-500',
-        powerpoint: 'text-yellow-500'
+        pdf: 'text-blue-600 dark:text-blue-400',
+        word: 'text-orange-500 dark:text-orange-400',
+        presentation: 'text-purple-600 dark:text-purple-400',
+        excel: 'text-green-500 dark:text-green-400',
+        powerpoint: 'text-yellow-500 dark:text-yellow-400'
       }
-      return colors[type] || 'text-gray-500'
+      return colors[type] || 'text-gray-500 dark:text-gray-400'
     },
     getTypeIcon(type) {
       const icons = {

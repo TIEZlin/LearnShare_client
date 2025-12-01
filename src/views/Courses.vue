@@ -3,7 +3,7 @@
     <!-- 如果没有选中课程，显示课程列表 -->
     <template v-if="!selectedCourse">
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold">全部课程</h1>
+        <h1 class="text-3xl font-bold dark:text-white transition-colors duration-300">全部课程</h1>
         
         <!-- 搜索框组件 -->
         <div class="relative w-80">
@@ -16,7 +16,7 @@
             @keydown.up.prevent="navigateSuggestions(-1)"
             @keydown.enter="executeSearch"
             placeholder="搜索课程名称"
-            class="w-full py-2 px-4 pr-10 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
+            class="w-full py-2 px-4 pr-10 border-2 border-blue-500 dark:border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
           />
           <button
             @click="executeSearch"
@@ -28,15 +28,15 @@
           <!-- 搜索历史和联想下拉列表 -->
           <div
             v-if="showSearchHistory || searchSuggestions.length > 0"
-            class="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto"
+            class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto transition-colors duration-300"
           >
             <!-- 搜索历史 -->
-            <div v-if="showSearchHistory && searchHistory.length > 0" class="p-2 border-b border-gray-200">
+            <div v-if="showSearchHistory && searchHistory.length > 0" class="p-2 border-b border-gray-200 dark:border-gray-700">
               <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-500">搜索历史</span>
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">搜索历史</span>
                 <button
                   @click="clearAllHistory"
-                  class="text-xs text-gray-400 hover:text-gray-600"
+                  class="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 >
                   清除全部
                 </button>
@@ -45,10 +45,10 @@
                 <li
                   v-for="(history, index) in searchHistory"
                   :key="'history-' + index"
-                  class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer transition-colors"
+                  class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                   @click="selectHistory(history)"
                 >
-                  <span class="text-sm flex items-center">
+                  <span class="text-sm flex items-center text-gray-700 dark:text-gray-300">
                     <span class="iconify mr-2 text-gray-400" data-icon="mdi:clock-outline"></span>
                     {{ history }}
                   </span>
@@ -64,12 +64,12 @@
             
             <!-- 搜索联想 -->
             <div v-if="searchSuggestions.length > 0" class="p-2">
-              <div v-if="showSearchHistory && searchHistory.length > 0" class="text-sm font-medium text-gray-500 mb-2">搜索联想</div>
+              <div v-if="showSearchHistory && searchHistory.length > 0" class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">搜索联想</div>
               <ul>
                 <li
                   v-for="(suggestion, index) in searchSuggestions"
                   :key="'suggestion-' + index"
-                  :class="['flex items-center py-2 px-3 cursor-pointer transition-colors', activeSuggestionIndex === index ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100']"
+                  :class="['flex items-center py-2 px-3 cursor-pointer transition-colors', activeSuggestionIndex === index ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300']"
                   @click="selectSuggestion(suggestion)"
                 >
                   <span class="iconify mr-2 text-gray-400" data-icon="mdi:magnify"></span>
@@ -79,7 +79,7 @@
             </div>
             
             <!-- 空状态 -->
-            <div v-if="showSearchHistory && searchHistory.length === 0 && searchSuggestions.length === 0" class="p-4 text-center text-gray-500">
+            <div v-if="showSearchHistory && searchHistory.length === 0 && searchSuggestions.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400">
               暂无搜索历史
             </div>
           </div>
@@ -87,13 +87,13 @@
       </div>
       
       <!-- 课程筛选 -->
-      <div class="bg-white card p-5 mb-8">
-        <h2 class="text-xl font-bold mb-4">课程筛选</h2>
+      <div class="bg-white dark:bg-gray-800 card p-5 mb-8 transition-colors duration-300">
+        <h2 class="text-xl font-bold mb-4 dark:text-white">课程筛选</h2>
         <div class="grid grid-cols-5 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">学院</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">学院</label>
             <select 
-              class="w-full border border-gray-300 rounded-md py-2 px-3"
+              class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               v-model="filters.college"
               @change="onFilterChange('college', filters.college)"
             >
@@ -1213,4 +1213,4 @@ export default {
     }
   }
 }
-</script>
+</script>

@@ -293,13 +293,13 @@
     </div>
     
     <!-- 搜索筛选区域 -->
-    <div class="bg-white card p-5 mb-8">
-      <h2 class="text-xl font-bold mb-4">课程筛选</h2>
+    <div class="bg-white dark:bg-gray-800 card p-5 mb-8 transition-colors duration-300">
+      <h2 class="text-xl font-bold mb-4 dark:text-white">课程筛选</h2>
       <div class="grid grid-cols-5 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">学院</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">学院</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 dark:text-white transition-colors"
             v-model="filters.college"
             @change="updateFilter('college', filters.college)"
           >
@@ -310,9 +310,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">专业</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">专业</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 dark:text-white transition-colors"
             v-model="filters.major"
             @change="updateFilter('major', filters.major)"
           >
@@ -323,9 +323,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">年级</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">年级</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 dark:text-white transition-colors"
             v-model="filters.grade"
             @change="updateFilter('grade', filters.grade)"
           >
@@ -336,9 +336,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">学分</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">学分</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 dark:text-white transition-colors"
             v-model="filters.credits"
             @change="updateFilter('credits', filters.credits)"
           >
@@ -349,9 +349,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">评分</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">评分</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 dark:text-white transition-colors"
             v-model="filters.rating"
             @change="updateFilter('rating', filters.rating)"
           >
@@ -364,7 +364,7 @@
     </div>
 
     <!-- 热门课程推荐 -->
-    <h2 class="text-2xl font-bold mb-4">热门课程推荐</h2>
+    <h2 class="text-2xl font-bold mb-4 dark:text-white">热门课程推荐</h2>
     <div class="custom-grid mb-12">
       <CourseCard 
         v-for="course in filteredCourses" 
@@ -375,7 +375,7 @@
     </div>
 
     <!-- 最新资源 -->
-    <h2 class="text-2xl font-bold mb-4">最新学习资源</h2>
+    <h2 class="text-2xl font-bold mb-4 dark:text-white">最新学习资源</h2>
     <div class="custom-grid">
       <ResourceCard 
         v-for="resource in latestResources" 
@@ -449,3 +449,4 @@ export default {
 
 
 
+
