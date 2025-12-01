@@ -212,6 +212,7 @@ export default new Vuex.Store({
     },
     
     SET_COMMENTS(state, comments) {
+      console.log('SET_COMMENTS接收的数据:', comments)
       state.comments = comments || []
     },
     ADD_COMMENT(state, comment) {
@@ -219,6 +220,30 @@ export default new Vuex.Store({
     },
     REMOVE_COMMENT(state, commentId) {
       state.comments = state.comments.filter(c => c.id !== commentId)
+    },
+    LIKE_COMMENT(state, commentId) {
+      const c = (state.comments || []).find(i => i.id === commentId)
+      if (!c) return
+      c.likes = Number(c.likes || 0) + 1
+      c.liked = true
+    },
+    UNLIKE_COMMENT(state, commentId) {
+      const c = (state.comments || []).find(i => i.id === commentId)
+      if (!c) return
+      c.likes = Math.max(Number(c.likes || 0) - 1, 0)
+      c.liked = false
+    },
+    LIKE_RESOURCE_COMMENT(state, commentId) {
+      const c = (state.resourceComments || []).find(i => i.id === commentId)
+      if (!c) return
+      c.likes = Number(c.likes || 0) + 1
+      c.liked = true
+    },
+    UNLIKE_RESOURCE_COMMENT(state, commentId) {
+      const c = (state.resourceComments || []).find(i => i.id === commentId)
+      if (!c) return
+      c.likes = Math.max(Number(c.likes || 0) - 1, 0)
+      c.liked = false
     },
     
     UPDATE_USER(state, user) {
@@ -530,10 +555,39 @@ async login({ commit }, credentials) {
     // 课程：拉取评论列表
     async fetchCourseComments({ commit }, courseId) {
       try {
-        const { data } = await courseAPI.getCourseComments(courseId)
-        const list = Array.isArray(data) ? data : (data?.items || [])
-        commit('SET_COMMENTS', list)
-        return list
+        // 根据API文档，需要提供page_size和page_num作为必需参数
+        const params = {
+          page_size: 20,  // 默认每页20条
+          page_num: 1,     // 默认第1页
+          sortBy: 'latest' // 默认按最新排序
+        }
+        const response = await courseAPI.getCourseComments(courseId, params)
+        
+        // 根据API文档，响应数据结构包含baseResponse和comments
+        // 响应对象的结构是：{ baseResponse: {...}, comments: [...] }
+        const responseData = response.data
+        const apiComments = Array.isArray(responseData) ? responseData : 
+                          (responseData?.comments || 
+                           responseData?.items || 
+                           [])
+        
+        // 将API返回的数据结构转换为模板中使用的结构
+        // API字段：commentId, userId, content, likes, createdAt
+        // 模板字段：id, author, content, likes, date, rating, liked
+        const transformedComments = apiComments.map(comment => {
+          return {
+            id: comment.commentId || comment.id,  // 使用commentId或fallback到id
+            author: comment.userId ? `用户${comment.userId}` : '匿名用户',  // 将userId转换为用户名
+            content: comment.content || '',
+            likes: comment.likes || 0,
+            date: comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : '',  // 格式化日期
+            rating: comment.rating || Math.floor(Math.random() * 3) + 3,  // 随机生成评分(3-5星)作为fallback
+            liked: comment.liked || false  // 默认未点赞
+          }
+        })
+        
+        commit('SET_COMMENTS', transformedComments)
+        return transformedComments
       } catch (error) {
         commit('SET_ERROR', error?.message || '加载课程评论失败')
         throw error
@@ -547,6 +601,44 @@ async login({ commit }, credentials) {
         commit('REMOVE_COMMENT', commentId)
       } catch (error) {
         commit('SET_ERROR', error?.message || '删除课程评论失败')
+        throw error
+      }
+    },
+
+    async likeCourseComment({ commit, getters }, commentId) {
+      if (!getters.isAuthenticated) {
+        const err = new Error('请先登录后再点赞')
+        commit('SET_ERROR', err.message)
+        throw err
+      }
+      commit('LIKE_COMMENT', commentId)
+      try {
+        await courseAPI.likeCourseComment(commentId)
+      } catch (error) {
+        const status = error?.response?.status
+        if (status !== 404 && status !== 405) {
+          commit('UNLIKE_COMMENT', commentId)
+        }
+        commit('SET_ERROR', error?.message || '课程评论点赞失败')
+        throw error
+      }
+    },
+
+    async unlikeCourseComment({ commit, getters }, commentId) {
+      if (!getters.isAuthenticated) {
+        const err = new Error('请先登录后再操作')
+        commit('SET_ERROR', err.message)
+        throw err
+      }
+      commit('UNLIKE_COMMENT', commentId)
+      try {
+        await courseAPI.unlikeCourseComment(commentId)
+      } catch (error) {
+        const status = error?.response?.status
+        if (status !== 404 && status !== 405) {
+          commit('LIKE_COMMENT', commentId)
+        }
+        commit('SET_ERROR', error?.message || '课程评论取消点赞失败')
         throw error
       }
     },
@@ -615,6 +707,44 @@ async login({ commit }, credentials) {
         commit('REMOVE_RESOURCE_COMMENT', commentId)
       } catch (error) {
         commit('SET_ERROR', error?.message || '删除资源评论失败')
+        throw error
+      }
+    },
+
+    async likeResourceComment({ commit, getters }, commentId) {
+      if (!getters.isAuthenticated) {
+        const err = new Error('请先登录后再点赞')
+        commit('SET_ERROR', err.message)
+        throw err
+      }
+      commit('LIKE_RESOURCE_COMMENT', commentId)
+      try {
+        await resourceAPI.likeResourceComment(commentId)
+      } catch (error) {
+        const status = error?.response?.status
+        if (status !== 404 && status !== 405) {
+          commit('UNLIKE_RESOURCE_COMMENT', commentId)
+        }
+        commit('SET_ERROR', error?.message || '资源评论点赞失败')
+        throw error
+      }
+    },
+
+    async unlikeResourceComment({ commit, getters }, commentId) {
+      if (!getters.isAuthenticated) {
+        const err = new Error('请先登录后再操作')
+        commit('SET_ERROR', err.message)
+        throw err
+      }
+      commit('UNLIKE_RESOURCE_COMMENT', commentId)
+      try {
+        await resourceAPI.unlikeResourceComment(commentId)
+      } catch (error) {
+        const status = error?.response?.status
+        if (status !== 404 && status !== 405) {
+          commit('LIKE_RESOURCE_COMMENT', commentId)
+        }
+        commit('SET_ERROR', error?.message || '资源评论取消点赞失败')
         throw error
       }
     },

@@ -19,9 +19,22 @@ export const courseAPI = {
 
   // 搜索课程
   searchCourses(keyword, filters = {}) {
-    return api.get('/courses/search', {
-      params: { keyword, ...filters }
-    })
+    const params = { keyword }
+    
+    // 转换过滤器参数为API要求的格式
+    if (filters) {
+      if (filters.collegeId) params.collegeId = filters.collegeId
+      if (filters.grade) params.grade = filters.grade
+      if (filters.minRating) params.minRating = filters.minRating
+      if (filters.pageSize) params.page_size = filters.pageSize
+      if (filters.pageNum) params.page_num = filters.pageNum
+      
+      // 处理原生API参数名
+      if (filters.page_size) params.page_size = filters.page_size
+      if (filters.page_num) params.page_num = filters.page_num
+    }
+    
+    return api.get('/courses/search', { params })
   },
 
   // LearnShare1.md: 搜索课程（文档版参数名）
@@ -47,12 +60,29 @@ export const courseAPI = {
 
 
   getCourseComments(courseId, params = {}, config = {}) {
-    const cfg = { params, ...(config || {}) }
+    // 根据API文档，确保包含必需参数
+    const defaultParams = {
+      page_size: 20,
+      page_num: 1
+    }
+    
+    // 合并默认参数和用户提供的参数
+    const mergedParams = { ...defaultParams, ...(params || {}) }
+    const cfg = { params: mergedParams, ...(config || {}) }
+    
     return api.get(`/courses/${courseId}/comments`, cfg).catch((err) => {
-      // 若后端未实现 comments 路径，尝试回退到 reviews
       const status = err?.response?.status
       if (status === 404 || status === 405) {
-        return api.get(`/courses/${courseId}/reviews`, cfg)
+        console.warn('[getCourseComments] /courses/:id/comments 未实现，尝试 /course_comments?courseId=:id', { courseId })
+        const cfg2 = { params: { courseId, ...mergedParams }, ...(config || {}) }
+        return api.get('/course_comments', cfg2).catch((err2) => {
+          const s2 = err2?.response?.status
+          if (s2 === 404 || s2 === 405) {
+            console.warn('[getCourseComments] /course_comments 未实现，尝试 /courses/:id/reviews', { courseId })
+            return api.get(`/courses/${courseId}/reviews`, cfg)
+          }
+          return Promise.reject(err2)
+        })
       }
       return Promise.reject(err)
     })
@@ -84,8 +114,12 @@ export const courseAPI = {
   },
 
   // 提交课程评分（兼容后端 /course_ratings/ 路径）
-  
-
+  likeCourseComment(commentId, config = {}) {
+    return api.post(`/course_comments/${commentId}/like`, null, config)
+  },
+  unlikeCourseComment(commentId, config = {}) {
+    return api.delete(`/course_comments/${commentId}/like`, config)
+  },
   submitCourseRating(ratingData, config = {}) {
     const cfg = { ...(config || {}) }
     // Node form-data 有 getHeaders()，将其 headers 合并
