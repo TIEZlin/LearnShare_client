@@ -783,7 +783,21 @@ GET /api/school/major/list
 > 200 Response
 
 ```json
-{}
+{
+  "total": 2,
+  "major_list": [
+    {
+      "majorId": 1,
+      "majorName": "计算机科学与技术",
+      "collegeId": 1
+    },
+    {
+      "majorId": 2,
+      "majorName": "人工智能",
+      "collegeId": 1
+    }
+  ]
+}
 ```
 
 ### 返回结果
@@ -794,7 +808,17 @@ GET /api/school/major/list
 
 ### 返回数据结构
 
-## GET 获取教师信息
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» total|integer|true|none||none|
+|» major_list|[object]|true|none||none|
+|»» majorId|integer|true|none||none|
+|»» majorName|string|true|none||none|
+|»» collegeId|integer|true|none||none|
+
+## GET 获取教师列表
 
 GET /api/school/teacher/list
 
@@ -802,8 +826,74 @@ GET /api/school/teacher/list
 
 |名称|位置|类型|必选|说明|
 |---|---|---|---|---|
-|teacherId|query|integer| 是 |none|
-|college_id|query|string| 是 |none|
+|page_size|query|integer| 是 |none|
+|page_num|query|string| 是 |none|
+|college_id|query|string| 否 |none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "total": 2,
+  "teacher_list": [
+    {
+      "teacherId": 1,
+      "teacherName": "张教授",
+      "collegeId": 1,
+      "introduction": "研究方向：分布式系统、操作系统。擅长理论与实践结合教学。",
+      "email": "",
+      "avatar_url": "",
+      "created_at": 0,
+      "updated_at": 0
+    },
+    {
+      "teacherId": 2,
+      "teacherName": "李教授",
+      "collegeId": 1,
+      "introduction": "研究方向：机器学习、人工智能。指导过多个顶级算法竞赛团队。",
+      "email": "",
+      "avatar_url": "",
+      "created_at": 0,
+      "updated_at": 0
+    }
+  ]
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» total|integer|true|none||none|
+|» teacher_list|[object]|true|none||none|
+|»» teacherId|integer|true|none||none|
+|»» teacherName|string|true|none||none|
+|»» collegeId|integer|true|none||none|
+|»» introduction|string|true|none||none|
+|»» email|string|true|none||none|
+|»» avatar_url|string|true|none||none|
+|»» created_at|integer|true|none||none|
+|»» updated_at|integer|true|none||none|
+
+## GET 获取教师详情
+
+GET /api/school/teacher/detail
+
+### 请求参数
+
+|名称|位置|类型|必选|说明|
+|---|---|---|---|---|
+|teacher_id|query|string| 否 |none|
 
 > 返回示例
 
@@ -2100,6 +2190,47 @@ GET /api/courses/{course_id}/resources
 |»» status|integer|false|none||none|
 |»» createdAt|integer|false|none||none|
 
+## GET 获取课程名称图片
+
+GET /api/course
+
+### 请求参数
+
+|名称|位置|类型|必选|说明|
+|---|---|---|---|---|
+|course_name|query|string| 是 |none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "baseResponse": {
+    "code": 10000,
+    "message": "成功"
+  },
+  "url": "http://21.jiqie.cn/115/111.170.19.169_1201201022.jpg"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» baseResponse|object|true|none||none|
+|»» code|integer|true|none||none|
+|»» message|string|true|none||none|
+|» url|string|true|none||none|
+
 # 资源
 
 ## GET 搜索资源
@@ -2142,7 +2273,6 @@ GET /api/resources/search
       "resourceId": 0,
       "title": "string",
       "description": "string",
-      "filePath": "string",
       "fileType": "string",
       "fileSize": 0,
       "uploaderId": 0,
@@ -2183,13 +2313,12 @@ GET /api/resources/search
 |»» resourceId|integer|false|none||none|
 |»» title|string|false|none||none|
 |»» description|string|false|none||none|
-|»» filePath|string|false|none||none|
 |»» fileType|string|false|none||none|
 |»» fileSize|integer|false|none||none|
 |»» uploaderId|integer|false|none||none|
 |»» courseId|integer|false|none||none|
 |»» downloadCount|integer|false|none||none|
-|»» averageRating|number|false|none||none|
+|»» averageRating|integer|false|none||none|
 |»» ratingCount|integer|false|none||none|
 |»» status|integer|false|none||none|
 |»» createdAt|integer|false|none||none|
@@ -2207,7 +2336,7 @@ POST /api/resources
 > Body 请求参数
 
 ```yaml
-file: file://C:\Users\zjc\Desktop\test.pptx
+file: file://C:\Users\zjc\Desktop\通义千问-Plus大模型调研报告.docx
 title: pptx
 description: ""
 course_id: 1
@@ -2230,21 +2359,63 @@ tags:
 
 > 返回示例
 
-> 201 Response
+> 200 Response
 
 ```json
-{}
+{
+  "baseResp": {
+    "code": 0,
+    "message": "string"
+  },
+  "resource": {
+    "resourceId": 0,
+    "title": "string",
+    "description": "string",
+    "filePath": "string",
+    "fileType": "string",
+    "fileSize": 0,
+    "uploaderId": 0,
+    "courseId": 0,
+    "downloadCount": 0,
+    "averageRating": 0,
+    "ratingCount": 0,
+    "status": 0,
+    "createdAt": 0
+  }
+}
 ```
 
 ### 返回结果
 
 |状态码|状态码含义|说明|数据模型|
 |---|---|---|---|
-|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|上传成功，资源已直接发布|Inline|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|上传成功，资源已直接发布|Inline|
 |202|[Accepted](https://tools.ietf.org/html/rfc7231#section-6.3.3)|上传成功，资源进入审核流程|Inline|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|文件类型/大小不符合要求|Inline|
 
 ### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» baseResp|object|true|none||none|
+|»» code|integer|true|none||none|
+|»» message|string|true|none||none|
+|» resource|object|true|none||none|
+|»» resourceId|integer|true|none||none|
+|»» title|string|true|none||none|
+|»» description|string|true|none||none|
+|»» filePath|string|true|none||none|
+|»» fileType|string|true|none||none|
+|»» fileSize|integer|true|none||none|
+|»» uploaderId|integer|true|none||none|
+|»» courseId|integer|true|none||none|
+|»» downloadCount|integer|true|none||none|
+|»» averageRating|integer|true|none||none|
+|»» ratingCount|integer|true|none||none|
+|»» status|integer|true|none||none|
+|»» createdAt|integer|true|none||none|
 
 ## GET 下载课程资源
 
@@ -2543,6 +2714,7 @@ rating: 1.5
 |名称|位置|类型|必选|说明|
 |---|---|---|---|---|
 |course_id|path|string| 是 |none|
+|Authorization|header|string| 否 |none|
 |body|body|object| 否 |none|
 |» rating|body|number| 是 |none|
 
@@ -2605,7 +2777,7 @@ POST /api/course_comments/{course_id}
 > Body 请求参数
 
 ```yaml
-contents: ""
+contents: test
 parent_id: ""
 
 ```
@@ -2759,10 +2931,9 @@ POST /api/course_comments/{comment_id}/likes
 
 > Body 请求参数
 
-```json
-{
-  "action": "like"
-}
+```yaml
+action: like
+
 ```
 
 ### 请求参数
@@ -2772,16 +2943,7 @@ POST /api/course_comments/{comment_id}/likes
 |comment_id|path|string| 是 |none|
 |Authorization|header|string| 是 |none|
 |body|body|object| 是 |none|
-|» action|body|string| 是 |none|
-
-#### 枚举值
-
-|属性|值|
-|---|---|
-|» action|like|
-|» action|dislike|
-|» action|cancel_like|
-|» action|cancel_dislike|
+|» action|body|string| 是 |"like", "dislike", "cancel_like", "cancel_dislike"|
 
 > 返回示例
 
@@ -3098,16 +3260,7 @@ POST /api/resource_comments/{comment_id}/likes
 |comment_id|path|string| 是 |none|
 |Authorization|header|string| 是 |none|
 |body|body|object| 是 |none|
-|» action|body|string| 是 |操作类型|
-
-#### 枚举值
-
-|属性|值|
-|---|---|
-|» action|like|
-|» action|dislike|
-|» action|cancel_like|
-|» action|cancel_dislike|
+|» action|body|string| 是 |"like", "dislike", "cancel_like", "cancel_dislike"|
 
 > 返回示例
 

@@ -11,7 +11,7 @@ api.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `${token}`
     }
     return config
   },
@@ -55,7 +55,11 @@ api.interceptors.response.use(
                response.data.data?.token ||
                response.data.data?.access_token ||
                response.data.result?.token ||
-               response.data.result?.access_token;
+               response.data.result?.access_token ||
+               response.data.baseResponse?.token ||
+               response.data.baseResponse?.access_token ||
+               response.data.baseResponse?.data?.token ||
+               response.data.baseResponse?.data?.access_token;
       } else {
         // 支持直接数据格式
         token = response.data.token || 

@@ -3,7 +3,7 @@
     <!-- 如果没有选中课程，显示课程列表 -->
     <template v-if="!selectedCourse">
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold dark:text-white transition-colors duration-300">全部课程</h1>
+        <h1 class="text-3xl font-bold">全部课程</h1>
         
         <!-- 搜索框组件 -->
         <div class="relative w-80">
@@ -16,7 +16,7 @@
             @keydown.up.prevent="navigateSuggestions(-1)"
             @keydown.enter="executeSearch"
             placeholder="搜索课程名称"
-            class="w-full py-2 px-4 pr-10 border-2 border-blue-500 dark:border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
+            class="w-full py-2 px-4 pr-10 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
           />
           <button
             @click="executeSearch"
@@ -28,15 +28,15 @@
           <!-- 搜索历史和联想下拉列表 -->
           <div
             v-if="showSearchHistory || searchSuggestions.length > 0"
-            class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto transition-colors duration-300"
+            class="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto"
           >
             <!-- 搜索历史 -->
-            <div v-if="showSearchHistory && searchHistory.length > 0" class="p-2 border-b border-gray-200 dark:border-gray-700">
+            <div v-if="showSearchHistory && searchHistory.length > 0" class="p-2 border-b border-gray-200">
               <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">搜索历史</span>
+                <span class="text-sm font-medium text-gray-500">搜索历史</span>
                 <button
                   @click="clearAllHistory"
-                  class="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                  class="text-xs text-gray-400 hover:text-gray-600"
                 >
                   清除全部
                 </button>
@@ -45,10 +45,10 @@
                 <li
                   v-for="(history, index) in searchHistory"
                   :key="'history-' + index"
-                  class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                  class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer transition-colors"
                   @click="selectHistory(history)"
                 >
-                  <span class="text-sm flex items-center text-gray-700 dark:text-gray-300">
+                  <span class="text-sm flex items-center">
                     <span class="iconify mr-2 text-gray-400" data-icon="mdi:clock-outline"></span>
                     {{ history }}
                   </span>
@@ -64,12 +64,12 @@
             
             <!-- 搜索联想 -->
             <div v-if="searchSuggestions.length > 0" class="p-2">
-              <div v-if="showSearchHistory && searchHistory.length > 0" class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">搜索联想</div>
+              <div v-if="showSearchHistory && searchHistory.length > 0" class="text-sm font-medium text-gray-500 mb-2">搜索联想</div>
               <ul>
                 <li
                   v-for="(suggestion, index) in searchSuggestions"
                   :key="'suggestion-' + index"
-                  :class="['flex items-center py-2 px-3 cursor-pointer transition-colors', activeSuggestionIndex === index ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300']"
+                  :class="['flex items-center py-2 px-3 cursor-pointer transition-colors', activeSuggestionIndex === index ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100']"
                   @click="selectSuggestion(suggestion)"
                 >
                   <span class="iconify mr-2 text-gray-400" data-icon="mdi:magnify"></span>
@@ -79,7 +79,7 @@
             </div>
             
             <!-- 空状态 -->
-            <div v-if="showSearchHistory && searchHistory.length === 0 && searchSuggestions.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400">
+            <div v-if="showSearchHistory && searchHistory.length === 0 && searchSuggestions.length === 0" class="p-4 text-center text-gray-500">
               暂无搜索历史
             </div>
           </div>
@@ -87,13 +87,13 @@
       </div>
       
       <!-- 课程筛选 -->
-      <div class="bg-white dark:bg-gray-800 card p-5 mb-8 transition-colors duration-300">
-        <h2 class="text-xl font-bold mb-4 dark:text-white">课程筛选</h2>
+      <div class="bg-white card p-5 mb-8">
+        <h2 class="text-xl font-bold mb-4">课程筛选</h2>
         <div class="grid grid-cols-5 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">学院</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">学院</label>
             <select 
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full border border-gray-300 rounded-md py-2 px-3"
               v-model="filters.college"
               @change="onFilterChange('college', filters.college)"
             >
@@ -247,39 +247,9 @@
             <span class="iconify text-xl mr-1" data-icon="mdi:calendar"></span>
             <span class="text-gray-700">秋季学期</span>
           </div>
-          <!-- 显示课程上课时间 -->
-          <div class="flex items-start mb-4">
-            <span class="iconify text-xl mr-1 mt-1" data-icon="mdi:clock-outline"></span>
-            <div class="text-gray-700">
-              <div v-for="(slot, index) in selectedCourse.schedule" :key="index">
-                {{ getDayName(slot.day) }} {{ getTimeString(slot.timeSlot) }} ({{ slot.location }})
-              </div>
-              <span v-if="!selectedCourse.schedule || selectedCourse.schedule.length === 0">
-                暂无时间安排
-              </span>
-            </div>
-          </div>
           <div class="mt-6">
             <h3 class="font-bold mb-2">课程简介</h3>
             <p class="text-gray-600">{{ selectedCourse.description }}</p>
-          </div>
-          
-          <div class="mt-6 pt-4 border-t border-gray-200">
-             <button 
-               v-if="!isEnrolled(selectedCourse.id)"
-               class="btn-primary w-full py-3 text-lg"
-               @click="handleEnroll(selectedCourse)"
-             >
-               选修此课程
-             </button>
-             <button 
-               v-else
-               class="bg-green-100 text-green-700 border border-green-300 font-medium py-3 px-4 rounded-lg w-full cursor-not-allowed flex justify-center items-center"
-               disabled
-             >
-               <span class="iconify mr-2" data-icon="mdi:check-circle"></span>
-               已选修
-             </button>
           </div>
         </div>
 
@@ -312,19 +282,6 @@
       <div class="col-span-2">
         <!-- 综合评分卡 -->
         <div class="card p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4">课程评分</h2>
-          <div class="grid grid-cols-4 gap-4 mb-6">
-            <div class="text-center">
-              <div class="text-3xl font-bold text-blue-600 mb-1">88%</div>
-              <div class="text-sm text-gray-600">推荐度</div>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-orange-500 mb-1">3.8</div>
-              <div class="text-sm text-gray-600">难度</div>
-            </div>
-
-
-          </div>
 
           <div class="mb-6">
             <h3 class="font-bold mb-3">您的评价</h3>
@@ -530,7 +487,7 @@ export default {
       }
     },
   computed: {
-    ...mapState(['selectedCourse', 'comments', 'userRating', 'filters', 'courses', 'myCourses']),
+    ...mapState(['selectedCourse', 'comments', 'userRating', 'filters', 'courses']),
     ...mapGetters(['filteredCourses']),
     
     // 搜索结果过滤
@@ -570,39 +527,6 @@ export default {
   methods: {
     ...mapActions(['submitRating', 'updateFilter', 'selectCourse', 'searchCoursesDoc', 'fetchCourseComments']),
     
-    getDayName(day) {
-      const map = {
-        monday: '周一',
-        tuesday: '周二',
-        wednesday: '周三',
-        thursday: '周四',
-        friday: '周五',
-        saturday: '周六',
-        sunday: '周日'
-      }
-      return map[day] || day
-    },
-    getTimeString(slotIndex) {
-      const times = [
-        '08:20-10:00', '10:20-12:00', '14:00-15:40', '15:50-17:30', '19:00-21:35'
-      ]
-      return times[slotIndex] || `第${slotIndex + 1}节`
-    },
-
-    isEnrolled(courseId) {
-      return this.myCourses.some(c => c.id === courseId)
-    },
-
-    async handleEnroll(course) {
-      try {
-        // 传递 course.id 而不是整个 course 对象
-        await this.$store.dispatch('enrollCourse', course.id)
-        alert('选课成功')
-      } catch (error) {
-        alert(error.message)
-      }
-    },
-
     // 加载搜索历史
     loadSearchHistory() {
       try {
@@ -852,31 +776,28 @@ export default {
               courseName: '数据结构',
               credit: 3,
               description: '数据结构是计算机科学的核心课程，介绍各种数据组织方式和算法。',
-              instructor: '张教授',
-              schedule: [{ day: 'monday', timeSlot: 0, location: 'A101' }, { day: 'wednesday', timeSlot: 0, location: 'A101' }]
+              instructor: '张教授'
             },
             {
               courseId: '2',
               courseName: '操作系统',
               credit: 4,
               description: '操作系统是管理计算机硬件和软件资源的系统软件。',
-              instructor: '李教授',
-              schedule: [{ day: 'tuesday', timeSlot: 1, location: 'B203' }, { day: 'thursday', timeSlot: 1, location: 'B203' }]
+              instructor: '李教授'
             },
             {
               courseId: '3',
               courseName: '计算机网络',
               credit: 3,
               description: '计算机网络课程涵盖网络协议、体系结构和网络应用等内容。',
-              instructor: '王教授',
-              schedule: [{ day: 'friday', timeSlot: 2, location: 'C305' }]
+              instructor: '王教授'
             }
           ]
         }
         
         const mapped = coursesList.map(item => {
           // 从原始courses数组中查找匹配的课程，获取完整信息
-          const originalCourse = this.courses.find(c => c.id == (item.courseId || item.id))
+          const originalCourse = this.courses.find(c => c.id === item.courseId || c.id === item.id)
           
           return {
             id: item.courseId || item.id,
@@ -886,8 +807,8 @@ export default {
             rating: parseFloat(item.rating || (originalCourse ? originalCourse.rating : 4.0)),
             credits: item.credit || item.credits || (originalCourse ? originalCourse.credits : 3),
             description: item.description || (originalCourse ? originalCourse.description : '暂无描述'),
-            image: item.image || (originalCourse ? originalCourse.image : '/images/courses/course-placeholder.svg'),
-            schedule: item.schedule || (originalCourse ? originalCourse.schedule : null)
+            // 只使用实际存在的image值，不设置默认占位图，让CourseCard组件的fetchCourseImage方法能够被调用
+            image: item.image || (originalCourse ? originalCourse.image : null)
           }
         })
         
@@ -897,12 +818,6 @@ export default {
         console.error('加载课程失败:', e)
         this.$store.commit('SET_ERROR', { title: '加载失败', message: '无法加载课程列表，请稍后重试' })
         
-        // 如果已有课程数据，则不覆盖
-        if (this.courses && this.courses.length > 0) {
-          console.log('保留现有课程数据')
-          return
-        }
-
         // 发生错误时使用模拟数据
         const mockCourses = [
           {
@@ -913,8 +828,7 @@ export default {
             rating: 4.5,
             credits: 3,
             description: '数据结构是计算机科学的核心课程，介绍各种数据组织方式和算法。',
-            image: '/images/courses/course-placeholder.svg',
-            schedule: [{ day: 'monday', timeSlot: 0, location: 'A101' }, { day: 'wednesday', timeSlot: 0, location: 'A101' }]
+            image: null
           },
           {
             id: '2',
@@ -924,8 +838,7 @@ export default {
             rating: 4.2,
             credits: 4,
             description: '操作系统是管理计算机硬件和软件资源的系统软件。',
-            image: '/images/courses/course-placeholder.svg',
-            schedule: [{ day: 'tuesday', timeSlot: 1, location: 'B203' }, { day: 'thursday', timeSlot: 1, location: 'B203' }]
+            image: null
           },
           {
             id: '3',
@@ -935,8 +848,7 @@ export default {
             rating: 4.0,
             credits: 3,
             description: '计算机网络课程涵盖网络协议、体系结构和网络应用等内容。',
-            image: '/images/courses/course-placeholder.svg',
-            schedule: [{ day: 'friday', timeSlot: 2, location: 'C305' }]
+            image: null
           }
         ]
         this.$store.commit('SET_COURSES', mockCourses)
@@ -1213,4 +1125,4 @@ export default {
     }
   }
 }
-</script>
+</script>
