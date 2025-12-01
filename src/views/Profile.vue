@@ -44,7 +44,7 @@
         <p class="text-sm text-gray-600">收藏课程{{ user.favorites.courses }}门，资源{{ user.favorites.resources }}份</p>
       </div>
       
-      <div class="card p-5 text-center hover:bg-blue-50 cursor-pointer">
+      <div @click="$router.push('/profile/security')" class="card p-5 text-center hover:bg-blue-50 cursor-pointer transition-colors">
         <div class="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
           <span class="iconify text-2xl text-green-700" data-icon="mdi:shield-lock"></span>
         </div>
@@ -147,3 +147,4 @@ export default {
 }
 </script>
 
+

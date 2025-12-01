@@ -7,6 +7,7 @@ import Resources from '../views/Resources.vue'
 import Profile from '../views/Profile.vue'
 import MyFavorites from '../views/MyFavorites.vue'
 import MyContributions from '../views/MyContributions.vue'
+import AccountSecurity from '../views/AccountSecurity.vue'
 import CourseDetail from '../views/CourseDetail.vue'
 import Admin from '../views/Admin.vue'
 import Login from '../views/Login.vue'
@@ -72,6 +73,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/profile/security',
+    name: 'AccountSecurity',
+    component: AccountSecurity,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/admin',
     name: 'Admin',
     component: Admin,
@@ -113,3 +120,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+
