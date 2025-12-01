@@ -1,5 +1,5 @@
 <template>
-  <div class="px-8 py-6" v-if="selectedResource">
+  <div class="px-8 py-6" v-if="displayResource">
     <!-- 返回资源广场按钮 -->
     <div class="mb-4">
       <button 
@@ -18,37 +18,55 @@
           <div class="flex items-center mb-4">
             <div 
               class="rounded-md flex items-center justify-center p-3 mr-4"
-              :class="getTypeClass(selectedResource.type)"
+              :class="getTypeClass(displayResource.type)"
             >
               <span 
                 class="iconify text-3xl"
-                :class="getTypeColor(selectedResource.type)"
-                :data-icon="getTypeIcon(selectedResource.type)"
+                :class="getTypeColor(displayResource.type)"
+                :data-icon="getTypeIcon(displayResource.type)"
               ></span>
             </div>
             <div>
-              <h1 class="text-2xl font-bold mb-1">{{ selectedResource.title }}</h1>
-              <p class="text-gray-600">{{ selectedResource.course }} · {{ selectedResource.semester }}</p>
+              <h1 class="text-2xl font-bold mb-1">{{ displayResource.title }}</h1>
             </div>
           </div>
-          <div class="flex justify-between text-sm mb-4">
-            <span>作者：{{ selectedResource.author }}</span>
+          <div class="flex justify-between items-center text-sm mb-4">
+            <div class="flex items-center">
+            </div>
             <div class="flex items-center">
               <span class="iconify mr-1" data-icon="mdi:download"></span>
-              <span>{{ selectedResource.downloads }}次下载</span>
+              <span>{{ displayResource.downloads }}次下载</span>
             </div>
           </div>
           <div class="flex items-center">
             <div class="star-rating flex mr-2">
-              <span 
-                v-for="star in 5" 
-                :key="star"
-                class="iconify star"
-                :class="{ active: star <= Math.floor(selectedResource.rating) }"
-                data-icon="mdi:star"
-              ></span>
             </div>
-            <span class="text-sm text-gray-600">{{ selectedResource.rating }}</span>
+          </div>
+        </div>
+
+        <!-- 新增：作者信息卡片 -->
+        <div class="card p-6 mt-6" v-if="authorInfo">
+          <h3 class="text-lg font-bold mb-3">作者信息</h3>
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden mr-4">
+              <img 
+                v-if="authorInfo.avatar_url"
+                :src="authorInfo.avatar_url" 
+                :alt="authorInfo.username" 
+                class="w-full h-full object-cover"
+              >
+              <span v-else class="iconify text-2xl flex items-center justify-center w-full h-full text-gray-500" data-icon="mdi:account"></span>
+            </div>
+            <div>
+              <h4 class="font-bold">{{ authorInfo.username }}</h4>
+              <p class="text-sm text-gray-600">{{ authorInfo.email }}</p>
+            </div>
+          </div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center">
+              <span class="iconify mr-2 text-gray-500" data-icon="mdi:trophy"></span>
+              <span>信誉分：{{ authorInfo.reputation_score || 0 }}</span>
+            </div>
           </div>
         </div>
 
@@ -68,12 +86,9 @@
 
           <h3 class="text-lg font-bold mb-3">文件信息</h3>
           <ul class="space-y-2 text-sm text-gray-700">
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:file"></span> 类型：{{ selectedResource.type }}</li>
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:book-education"></span> 课程：{{ selectedResource.course }}</li>
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:calendar"></span> 学期：{{ selectedResource.semester }}</li>
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:account"></span> 作者：{{ selectedResource.author }}</li>
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:star"></span> 评分：{{ selectedResource.rating }}</li>
-            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:download"></span> 下载：{{ selectedResource.downloads }}</li>
+            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:file"></span> 类型：{{ displayResource.type }}</li>
+            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:account"></span> 作者：{{ authorInfo.username }}</li>
+            <li class="flex items-center"><span class="iconify mr-2" data-icon="mdi:download"></span> 下载：{{ displayResource.downloads }}</li>
           </ul>
         </div>
 
@@ -100,7 +115,6 @@
       <!-- 右侧评分和评论 -->
       <div class="col-span-2">
         <div class="card p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4">资源评分</h2>
           <div class="mb-6">
             <h3 class="font-bold mb-3">您的评价</h3>
             <div class="mb-4">
@@ -179,16 +193,47 @@
 
 <script>
 import { mapState } from 'vuex'
+import { profileAPI } from '../api/profile'
 
 export default {
   name: 'ResourceDetail',
   data() {
     return {
-      isFavorite: false
+      isFavorite: false,
+      authorInfo: null,
+      authorLoading: false,
+      authorError: null
     }
   },
   computed: {
     ...mapState(['selectedResource', 'resourceComments', 'resourceUserRating']),
+    displayResource() {
+      // 为selectedResource提供默认值，确保即使数据缺失也能正常显示
+      if (!this.selectedResource) {
+        return {
+          id: '0',
+          title: '未知资源',
+          course: '未知课程',
+          semester: '未知学期',
+          author: '未知作者',
+          authorId: null,
+          downloads: 0,
+          rating: 0,
+          type: 'unknown'
+        }
+      }
+      return {
+        id: this.selectedResource.id || '0',
+        title: this.selectedResource.title || '未知资源',
+        course: this.selectedResource.course || '未知课程',
+        semester: this.selectedResource.semester || '未知学期',
+        author: this.selectedResource.author || '未知作者',
+        authorId: this.selectedResource.authorId || this.selectedResource.userId || null,
+        downloads: this.selectedResource.downloads || 0,
+        rating: this.selectedResource.rating || 0,
+        type: this.selectedResource.type || 'unknown'
+      }
+    },
     relatedResources() {
       const list = this.$store.state.resources || []
       const cur = this.selectedResource
@@ -199,6 +244,38 @@ export default {
     }
   },
   methods: {
+    // 获取作者详细信息
+    async fetchAuthorInfo() {
+      if (!this.displayResource || !this.displayResource.authorId) {
+        console.warn('缺少作者ID，无法获取作者信息');
+        return;
+      }
+
+      this.authorLoading = true;
+      this.authorError = null;
+
+      try {
+        const response = await profileAPI.getUserInfo(this.displayResource.authorId);
+        // 适配后端返回的数据结构
+        if (response && response.data) {
+          if (response.data.baseResponse) {
+            // 如果有baseResponse结构
+            this.authorInfo = response.data.user || {};
+          } else {
+            // 直接获取用户数据
+            this.authorInfo = response.data || {};
+          }
+          console.log('获取作者信息成功:', this.authorInfo);
+        }
+      } catch (error) {
+        console.error('获取作者信息失败:', error);
+        this.authorError = error.message || '获取作者信息失败';
+        // 即使获取失败，也可以使用资源中的基本作者信息
+      } finally {
+        this.authorLoading = false;
+      }
+    },
+
     setRating(rating) {
       this.$store.commit('SET_RESOURCE_USER_RATING', {
         rating,
@@ -227,8 +304,8 @@ export default {
       }
     },
     downloadResource() {
-      if (!this.selectedResource) return
-      this.$store.commit('INCREMENT_RESOURCE_DOWNLOADS', this.selectedResource.id)
+      if (!this.displayResource) return
+      this.$store.commit('INCREMENT_RESOURCE_DOWNLOADS', this.displayResource.id)
       alert('开始下载（示例）')
     },
     toggleFavorite() {
@@ -326,9 +403,12 @@ export default {
         try {
           if (res && res.id) {
             await this.$store.dispatch('fetchResourceComments', res.id)
+            // 当资源变化时，获取作者信息
+            this.fetchAuthorInfo()
           } else {
-            // 未选中资源时，清空评论，避免残留
+            // 未选中资源时，清空评论和作者信息
             this.$store.commit('SET_RESOURCE_COMMENTS', [])
+            this.authorInfo = null
           }
         } catch (error) {
           console.error('加载资源评论失败:', {
@@ -338,6 +418,13 @@ export default {
           const msg = error?.response?.data?.message || error?.message || '加载资源评论失败'
           this.$root?.$emit?.('message', msg, 'error')
         }
+      }
+    },
+    // 监听displayResource变化，确保作者信息也会更新
+    displayResource: {
+      immediate: true,
+      handler() {
+        this.fetchAuthorInfo()
       }
     }
   },
@@ -349,6 +436,9 @@ export default {
     if (!this.selectedResource && this.$store.state.resources?.length > 0) {
       this.$store.commit('SET_SELECTED_RESOURCE', this.$store.state.resources[0])
     }
+    
+    // 获取作者信息
+    this.fetchAuthorInfo()
   }
 }
 </script>

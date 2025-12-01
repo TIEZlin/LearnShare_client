@@ -282,19 +282,6 @@
       <div class="col-span-2">
         <!-- 综合评分卡 -->
         <div class="card p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4">课程评分</h2>
-          <div class="grid grid-cols-4 gap-4 mb-6">
-            <div class="text-center">
-              <div class="text-3xl font-bold text-blue-600 mb-1">88%</div>
-              <div class="text-sm text-gray-600">推荐度</div>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-orange-500 mb-1">3.8</div>
-              <div class="text-sm text-gray-600">难度</div>
-            </div>
-
-
-          </div>
 
           <div class="mb-6">
             <h3 class="font-bold mb-3">您的评价</h3>
@@ -820,7 +807,8 @@ export default {
             rating: parseFloat(item.rating || (originalCourse ? originalCourse.rating : 4.0)),
             credits: item.credit || item.credits || (originalCourse ? originalCourse.credits : 3),
             description: item.description || (originalCourse ? originalCourse.description : '暂无描述'),
-            image: item.image || (originalCourse ? originalCourse.image : '/images/courses/course-placeholder.svg')
+            // 只使用实际存在的image值，不设置默认占位图，让CourseCard组件的fetchCourseImage方法能够被调用
+            image: item.image || (originalCourse ? originalCourse.image : null)
           }
         })
         
@@ -840,7 +828,7 @@ export default {
             rating: 4.5,
             credits: 3,
             description: '数据结构是计算机科学的核心课程，介绍各种数据组织方式和算法。',
-            image: '/images/courses/course-placeholder.svg'
+            image: null
           },
           {
             id: '2',
@@ -850,7 +838,7 @@ export default {
             rating: 4.2,
             credits: 4,
             description: '操作系统是管理计算机硬件和软件资源的系统软件。',
-            image: '/images/courses/course-placeholder.svg'
+            image: null
           },
           {
             id: '3',
@@ -860,7 +848,7 @@ export default {
             rating: 4.0,
             credits: 3,
             description: '计算机网络课程涵盖网络协议、体系结构和网络应用等内容。',
-            image: '/images/courses/course-placeholder.svg'
+            image: null
           }
         ]
         this.$store.commit('SET_COURSES', mockCourses)

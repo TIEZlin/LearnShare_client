@@ -7,6 +7,11 @@ export const profileAPI = {
     return api.get('/profile')
   },
 
+  // 获取用户信息（通过用户ID）
+  getUserInfo(userId) {
+    return api.get(`/users/${userId}`)
+  },
+
   // 更新个人资料
   updateProfile(userData) {
     return api.put('/profile', userData)

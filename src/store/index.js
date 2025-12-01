@@ -379,12 +379,15 @@ async login({ commit }, credentials) {
           
           // 如果响应头中没有token，检查响应体中是否有
           if (!token) {
+            // 检查baseResponse结构下的各种可能的token位置
             token = response.data.token || 
                    response.data.access_token || 
                    response.data.data?.token ||
                    response.data.data?.access_token ||
                    response.data.result?.token ||
-                   response.data.result?.access_token;
+                   response.data.result?.access_token ||
+                   response.data.baseResponse?.token ||
+                   response.data.baseResponse?.access_token;
             
             console.log('从响应体提取的token:', token);
           }
@@ -1061,8 +1064,28 @@ async login({ commit }, credentials) {
     async fetchResources({ commit }, params = {}) {
       try {
         const response = await resourceAPI.getResources(params)
-        commit('SET_RESOURCES', response.data)
-        return response.data
+        // 确保资源数据有合适的默认值
+        const resources = Array.isArray(response.data) ? response.data.map(resource => ({
+          id: resource.id || resource.resourceId,
+          title: resource.title || '未知资源',
+          description: resource.description || '',
+          type: resource.type || resource.fileType,
+          filePath: resource.filePath,
+          fileSize: resource.fileSize,
+          courseId: resource.courseId,
+          course: resource.course || '未知课程',
+          semester: resource.semester || '未知学期',
+          author: resource.author || '未知作者',
+          authorId: resource.authorId || resource.uploaderId,
+          downloads: resource.downloads || resource.downloadCount || 0,
+          rating: resource.rating || resource.averageRating || 0,
+          ratingCount: resource.ratingCount || 0,
+          status: resource.status,
+          createdAt: resource.createdAt,
+          tags: resource.tags || []
+        })) : []
+        commit('SET_RESOURCES', resources)
+        return resources
       } catch (error) {
         throw error
       }
@@ -1071,7 +1094,28 @@ async login({ commit }, credentials) {
     async fetchResourceById({ commit }, resourceId) {
       try {
         const response = await resourceAPI.getResourceById(resourceId)
-        return response.data
+        const resource = response.data
+        // 确保单个资源数据有合适的默认值
+        const processedResource = {
+          id: resource.id || resource.resourceId,
+          title: resource.title || '未知资源',
+          description: resource.description || '',
+          type: resource.type || resource.fileType,
+          filePath: resource.filePath,
+          fileSize: resource.fileSize,
+          courseId: resource.courseId,
+          course: resource.course || '未知课程',
+          semester: resource.semester || '未知学期',
+          author: resource.author || '未知作者',
+          authorId: resource.authorId || resource.uploaderId,
+          downloads: resource.downloads || resource.downloadCount || 0,
+          rating: resource.rating || resource.averageRating || 0,
+          ratingCount: resource.ratingCount || 0,
+          status: resource.status,
+          createdAt: resource.createdAt,
+          tags: resource.tags || []
+        }
+        return processedResource
       } catch (error) {
         throw error
       }
@@ -1087,19 +1131,19 @@ async login({ commit }, credentials) {
         // 需要将后端字段映射到前端期望的字段
         const resources = (response.data?.resources || []).map(resource => ({
           id: resource.resourceId,
-          title: resource.title,
-          description: resource.description,
+          title: resource.title || '未知资源',
+          description: resource.description || '',
           type: resource.fileType,
           filePath: resource.filePath,
           fileSize: resource.fileSize,
           courseId: resource.courseId,
-          course: resource.course || '', // 如果后端没有直接返回课程名，需要从课程ID获取
-          semester: resource.semester || '',
-          author: resource.author || '', // 如果后端没有直接返回作者名，需要从uploaderId获取
+          course: resource.course || '未知课程', // 如果后端没有直接返回课程名，需要从课程ID获取
+          semester: resource.semester || '未知学期',
+          author: resource.author || '未知作者', // 如果后端没有直接返回作者名，设置默认值
           authorId: resource.uploaderId,
-          downloads: resource.downloadCount,
-          rating: resource.averageRating,
-          ratingCount: resource.ratingCount,
+          downloads: resource.downloadCount || 0,
+          rating: resource.averageRating || 0,
+          ratingCount: resource.ratingCount || 0,
           status: resource.status,
           createdAt: resource.createdAt,
           tags: resource.tags || []

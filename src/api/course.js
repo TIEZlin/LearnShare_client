@@ -120,12 +120,21 @@ export const courseAPI = {
     return api.delete('/course_comments', cfg)
   },
 
-  // 提交课程评分（根据API文档使用正确路径）
+  // 课程评论点赞/取消点赞
   likeCourseComment(commentId, config = {}) {
-    return api.post(`/course_comments/${commentId}/like`, null, config)
+    const data = {
+      commentId,
+      action: 'like'
+    }
+    return api.post(`/course_comments/${commentId}/likes`, data, config)
   },
+
   unlikeCourseComment(commentId, config = {}) {
-    return api.delete(`/course_comments/${commentId}/like`, config)
+    const data = {
+      commentId,
+      action: 'cancel_like'
+    }
+    return api.post(`/course_comments/${commentId}/likes`, data, config)
   },
   submitCourseRating(ratingData, config = {}) {
     const cfg = { ...(config || {}) }
@@ -168,6 +177,16 @@ export const courseAPI = {
   // 退课
   dropCourse(courseId) {
     return api.delete(`/courses/${courseId}/enroll`)
+  },
+
+  // 获取课程图片
+  getCourseImage(courseName) {
+    return api.get('/course', { params: { course_name: courseName } })
+  },
+  
+  // 获取教师详情
+  getTeacherDetail(teacherId) {
+    return api.get('/school/teacher/detail', { params: { teacher_id: teacherId } })
   }
 }
 
