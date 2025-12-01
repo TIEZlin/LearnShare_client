@@ -7,6 +7,50 @@ import { adminAPI } from '../api/admin'
 
 Vue.use(Vuex)
 
+const formatTimestamp = (value) => {
+  if (value === undefined || value === null) return ''
+  const numeric = Number(value)
+  if (Number.isNaN(numeric)) return ''
+  const milliseconds = numeric < 100000000000 ? numeric * 1000 : numeric
+  return new Date(milliseconds).toLocaleString()
+}
+
+const buildReviewRecord = (item = {}, label = '目标') => {
+  const reviewId = item.reviewId || item.id || item.targetId || Date.now()
+  const targetId = item.targetId ?? ''
+  const title = item.targetName || `${label}${targetId ? ` #${targetId}` : ''}`
+  return {
+    id: reviewId,
+    title,
+    targetId,
+    targetType: item.targetType || '',
+    reason: item.reason || '—',
+    status: item.status || 'pending',
+    priority: item.priority ?? null,
+    reporter: item.reporterId ? `用户${item.reporterId}` : '系统',
+    createdAt: formatTimestamp(item.createdAt),
+    raw: item
+  }
+}
+
+const mapReviewList = (list = [], label = '目标') => {
+  if (!Array.isArray(list)) return []
+  return list.map((item) => buildReviewRecord(item, label))
+}
+
+const extractList = (payload, candidates = []) => {
+  if (Array.isArray(payload)) return payload
+  if (!payload || typeof payload !== 'object') return []
+  for (const key of candidates) {
+    if (Array.isArray(payload[key])) return payload[key]
+  }
+  if (Array.isArray(payload.data)) return payload.data
+  if (Array.isArray(payload.items)) return payload.items
+  return []
+}
+
+const defaultAdminPaging = { page_size: 10, page_num: 1 }
+
 export default new Vuex.Store({
   state: {
     // 认证状态
@@ -185,6 +229,9 @@ export default new Vuex.Store({
         date: '2023-12-12 09:45'
       }
     ],
+    pendingCourseReviews: [],
+    pendingCourseCommentReviews: [],
+    pendingResourceCommentReviews: [],
     
     // 用户列表
     users: [
@@ -231,6 +278,8 @@ export default new Vuex.Store({
       notifications: false,
       notificationsUnread: false
     },
+    adminPermissions: [],
+    adminRoles: [],
 
     // 错误状态
     error: null
@@ -393,9 +442,24 @@ export default new Vuex.Store({
     SET_PENDING_RESOURCES(state, resources) {
       state.pendingResources = resources
     },
+    SET_PENDING_COURSE_REVIEWS(state, reviews) {
+      state.pendingCourseReviews = reviews
+    },
+    SET_PENDING_COURSE_COMMENT_REVIEWS(state, reviews) {
+      state.pendingCourseCommentReviews = reviews
+    },
+    SET_PENDING_RESOURCE_COMMENT_REVIEWS(state, reviews) {
+      state.pendingResourceCommentReviews = reviews
+    },
 
     SET_STATISTICS(state, statistics) {
       state.statistics = statistics
+    },
+    SET_ADMIN_PERMISSIONS(state, permissions) {
+      state.adminPermissions = permissions || []
+    },
+    SET_ADMIN_ROLES(state, roles) {
+      state.adminRoles = roles || []
     },
 
     // 选课相关 - 这些应该是 actions，不小心放到了 mutations，现已移除
@@ -1303,28 +1367,259 @@ async login({ commit }, credentials) {
     async fetchUsers({ commit }, params = {}) {
       try {
         const response = await adminAPI.getUsers(params)
-        commit('SET_USERS', response.data)
-        return response.data
+        const data = response?.data
+        const list = Array.isArray(data?.users) ? data.users : (Array.isArray(data) ? data : [])
+        commit('SET_USERS', list.length ? list : data)
+        return data
       } catch (error) {
         throw error
       }
     },
 
-    async fetchPendingResources({ commit }, params = {}) {
+    async createAdminUser({ dispatch }, payload) {
       try {
-        const response = await adminAPI.getPendingResources(params)
-        commit('SET_PENDING_RESOURCES', response.data)
-        return response.data
+        await adminAPI.createUser(payload)
+        await dispatch('fetchUsers')
       } catch (error) {
         throw error
       }
     },
 
-    async reviewResource({ commit }, { resourceId, action, comment }) {
+    async updateAdminUser({ dispatch }, payload) {
       try {
-        await adminAPI.reviewResource(resourceId, action, comment)
-        // 重新获取待审核资源列表
-        await this.dispatch('fetchPendingResources')
+        await adminAPI.updateUser(payload)
+        await dispatch('fetchUsers')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async createCollege(_, data) {
+      try {
+        return await adminAPI.createCollege(data)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async createMajor(_, data) {
+      try {
+        return await adminAPI.createMajor(data)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async createTeacher(_, data) {
+      try {
+        const formData = data instanceof FormData ? data : new FormData()
+        if (!(data instanceof FormData)) {
+          formData.append('teacher_name', data.teacher_name || '')
+          formData.append('college_id', data.college_id || '')
+          formData.append('introduction', data.introduction || '')
+          formData.append('email', data.email || '')
+          if (data.avatar) {
+            formData.append('avatar', data.avatar)
+          }
+        }
+        return await adminAPI.createTeacher(formData)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchResourceReviewList({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getResourceReviewList({ ...defaultAdminPaging, ...(params || {}) })
+        const list = extractList(response?.data, ['resource_review_list', 'resourceReviewList'])
+        const normalized = mapReviewList(list, '资源')
+        commit('SET_PENDING_RESOURCES', normalized)
+        return normalized
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchCourseReviewList({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getCourseReviewList({ ...defaultAdminPaging, ...(params || {}) })
+        const list = extractList(response?.data, ['course_review_list', 'review_list'])
+        const normalized = mapReviewList(list, '课程')
+        commit('SET_PENDING_COURSE_REVIEWS', normalized)
+        return normalized
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchCourseCommentReviewList({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getCourseCommentReviewList({ ...defaultAdminPaging, ...(params || {}) })
+        const list = extractList(response?.data, ['comment_audit_list', 'course_comment_review_list'])
+        const normalized = mapReviewList(list, '课程评论')
+        commit('SET_PENDING_COURSE_COMMENT_REVIEWS', normalized)
+        return normalized
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchResourceCommentReviewList({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getResourceCommentReviewList({ ...defaultAdminPaging, ...(params || {}) })
+        const list = extractList(response?.data, ['comment_audit_list', 'resource_comment_review_list'])
+        const normalized = mapReviewList(list, '资源评论')
+        commit('SET_PENDING_RESOURCE_COMMENT_REVIEWS', normalized)
+        return normalized
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async processResourceReview({ dispatch }, { reviewId, action }) {
+      try {
+        await adminAPI.processResourceReview(reviewId, action)
+        await dispatch('fetchResourceReviewList')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async processCourseReview({ dispatch }, { reviewId, action }) {
+      try {
+        await adminAPI.processCourseReview(reviewId, action)
+        await dispatch('fetchCourseReviewList')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async processCourseCommentReview({ dispatch }, { reviewId, action }) {
+      try {
+        await adminAPI.processCourseCommentReview(reviewId, action)
+        await dispatch('fetchCourseCommentReviewList')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async processResourceCommentReview({ dispatch }, { reviewId, action }) {
+      try {
+        await adminAPI.processResourceCommentReview(reviewId, action)
+        await dispatch('fetchResourceCommentReviewList')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchPermissions({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getPermissions(params)
+        const list = extractList(response?.data, ['permissions'])
+        commit('SET_ADMIN_PERMISSIONS', list)
+        return list
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchRoles({ commit }, params = {}) {
+      try {
+        const response = await adminAPI.getRoles(params)
+        const list = extractList(response?.data, ['roles'])
+        commit('SET_ADMIN_ROLES', list)
+        return list
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async createRole({ dispatch }, payload) {
+      try {
+        await adminAPI.createRole(payload)
+        await dispatch('fetchRoles')
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminCourse(_, courseId) {
+      try {
+        return await adminAPI.deleteCourse(courseId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminResource(_, resourceId) {
+      try {
+        return await adminAPI.deleteResource(resourceId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminResourceComment(_, commentId) {
+      try {
+        return await adminAPI.deleteResourceComment(commentId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminCourseComment(_, commentId) {
+      try {
+        return await adminAPI.deleteCourseComment(commentId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminResourceRating(_, ratingId) {
+      try {
+        return await adminAPI.deleteResourceRating(ratingId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteAdminCourseRating(_, ratingId) {
+      try {
+        return await adminAPI.deleteCourseRating(ratingId)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async createShopProduct(_, payload) {
+      try {
+        return await adminAPI.createShopProduct(payload)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteShopProducts(_, ids) {
+      try {
+        return await adminAPI.deleteShopProducts(ids)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteShopCategory(_, id) {
+      try {
+        return await adminAPI.deleteShopCategory(id)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async updateShopInventory(_, payload) {
+      try {
+        const { id, ...rest } = payload || {}
+        if (!id) throw new Error('缺少商品ID')
+        return await adminAPI.updateInventory(id, rest)
       } catch (error) {
         throw error
       }
@@ -1338,8 +1633,7 @@ async login({ commit }, credentials) {
       } catch (error) {
         throw error
       }
-    }
-    ,
+    },
     // 通知相关
     async fetchNotifications({ commit }, params = {}) {
       try {

@@ -1,76 +1,111 @@
 import api from './index'
 
-// 管理员相关API
+// 管理员相关API，参照 guanlier.md 接口文档
 export const adminAPI = {
-  // 获取用户列表
+  // —— 学校结构 ——
+  createCollege(data) {
+    return api.post('/admin/colleges', data)
+  },
+  createMajor(data) {
+    return api.post('/admin/majors', data)
+  },
+  createTeacher(formData) {
+    return api.post('/admin/teachers', formData)
+  },
+
+  // —— 用户管理 ——
   getUsers(params = {}) {
     return api.get('/admin/users', { params })
   },
-
-  // 更新用户状态
-  updateUserStatus(userId, status) {
-    return api.put(`/admin/users/${userId}/status`, { status })
+  createUser(userData) {
+    return api.post('/admin/users', userData)
   },
-
-  // 删除用户
+  updateUser(userData) {
+    return api.put('/admin/users', userData)
+  },
   deleteUser(userId) {
     return api.delete(`/admin/users/${userId}`)
   },
 
-  // 获取待审核资源
-  getPendingResources(params = {}) {
-    return api.get('/admin/resources/pending', { params })
+  // —— 审核队列 ——
+  getResourceReviewList(params = {}) {
+    return api.get('/admin/audit/resources', { params })
+  },
+  processResourceReview(reviewId, action) {
+    return api.post(`/admin/audit/resources/${reviewId}`, { action })
+  },
+  getCourseReviewList(params = {}) {
+    return api.get('/admin/audit/courses', { params })
+  },
+  processCourseReview(reviewId, action) {
+    return api.post(`/admin/audit/courses/${reviewId}`, { action })
+  },
+  getCourseCommentReviewList(params = {}) {
+    return api.get('/admin/audit/course_comments', { params })
+  },
+  processCourseCommentReview(reviewId, action) {
+    return api.post(`/admin/audit/course_comments/${reviewId}`, { action })
+  },
+  getResourceCommentReviewList(params = {}) {
+    return api.get('/admin/audit/resource_comments', { params })
+  },
+  processResourceCommentReview(reviewId, action) {
+    return api.post(`/admin/audit/resource_comments/${reviewId}`, { action })
   },
 
-  // 审核资源
-  reviewResource(resourceId, action, comment = '') {
-    return api.post(`/admin/resources/${resourceId}/review`, {
-      action, // 'approve' | 'reject'
-      comment
-    })
+  // —— 权限/角色 ——
+  getPermissions(params = {}) {
+    return api.get('/admin/permissions', { params })
+  },
+  getRoles(params = {}) {
+    return api.get('/admin/roles', { params })
+  },
+  createRole(roleData) {
+    return api.post('/admin/roles', roleData)
   },
 
-  // 获取统计数据
-  getStatistics() {
-    return api.get('/admin/statistics')
-  },
-
-  // 获取系统日志
-  getSystemLogs(params = {}) {
-    return api.get('/admin/logs', { params })
-  },
-
-  // 获取课程管理列表
-  getCoursesForAdmin(params = {}) {
-    return api.get('/admin/courses', { params })
-  },
-
-  // 创建课程
-  createCourse(courseData) {
-    return api.post('/admin/courses', courseData)
-  },
-
-  // 更新课程
-  updateCourse(courseId, courseData) {
-    return api.put(`/admin/courses/${courseId}`, courseData)
-  },
-
-  // 删除课程
+  // —— 课程/资源管理 ——
   deleteCourse(courseId) {
     return api.delete(`/admin/courses/${courseId}`)
   },
-
-  // 获取资源管理列表
-  getResourcesForAdmin(params = {}) {
-    return api.get('/admin/resources', { params })
+  deleteResource(resourceId) {
+    return api.delete(`/admin/resources/${resourceId}`)
+  },
+  deleteResourceComment(commentId) {
+    return api.delete(`/admin/resource_comments/${commentId}`)
+  },
+  deleteCourseComment(commentId) {
+    return api.delete(`/admin/course_comments/${commentId}`)
+  },
+  deleteResourceRating(ratingId) {
+    return api.delete(`/admin/resource_ratings/${ratingId}`)
+  },
+  deleteCourseRating(ratingId) {
+    return api.delete(`/admin/course_ratings/${ratingId}`)
   },
 
-  // 批量操作资源
-  batchUpdateResources(resourceIds, action) {
-    return api.post('/admin/resources/batch', {
-      resourceIds,
-      action
+  // —— 商城 ——
+  createShopProduct(productData) {
+    return api.post('/admin/shop/products', productData)
+  },
+  deleteShopProducts(ids = []) {
+    return api.delete('/admin/shop/products', {
+      params: { id: ids }
     })
+  },
+  deleteShopCategory(id) {
+    return api.delete('/admin/shop/categories', { params: { id } })
+  },
+  updateInventory(id, payload) {
+    return api.put(`/admin/shop/inventory/${id}`, payload)
+  },
+
+  // —— 统计/日志（沿用原有接口） ——
+  getStatistics() {
+    return api.get('/admin/statistics')
+  },
+  getSystemLogs(params = {}) {
+    return api.get('/admin/logs', { params })
   }
 }
 
