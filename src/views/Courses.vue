@@ -878,7 +878,8 @@ export default {
     async loadCourseComments(courseId) {
       try {
         this.$store.commit('SET_LOADING', { key: 'comments', value: true })
-        const comments = await this.fetchCourseComments(courseId)
+        // 正确调用store的action而不是不存在的本地方法
+        const comments = await this.$store.dispatch('fetchCourseComments', courseId)
         
         console.log('实际获取的评论数据:', comments)
         
@@ -887,7 +888,7 @@ export default {
           console.log('当前课程暂无评论数据')
         }
         
-        this.$store.commit('SET_COMMENTS', comments || [])
+        // 不需要再次commit，因为action已经处理了
       } catch (error) {
         this.$store.commit('SET_LOADING', { key: 'comments', value: false })
         console.error('加载课程评论失败:', {

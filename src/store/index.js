@@ -783,11 +783,28 @@ async login({ commit }, credentials) {
         throw err
       }
       const author = state.currentUser?.username || '当前用户'
+      // 设置默认的评分参数，因为前端界面没有交互传入这些值
+      const difficulty = 3  // 默认难度为3（中等）
+      const workload = 3     // 默认工作量为3（中等）
+      const usefulness = 4   // 默认有用性为4（较高）
       try {
-        // 先提交评分
-        await courseAPI.submitCourseRating({ courseId, rating })
-        // 再提交评论（同时附带评分，后端可选择是否使用）
-        const res = await courseAPI.submitCourseComment({ courseId, content: comment, rating })
+        // 先提交评分，添加difficulty、workload和usefulness参数
+        await courseAPI.submitCourseRating({ 
+          courseId, 
+          rating, 
+          difficulty, 
+          workload, 
+          usefulness 
+        })
+        // 再提交评论（同时附带所有评分参数，后端可选择是否使用）
+        const res = await courseAPI.submitCourseComment({ 
+          courseId, 
+          contents: comment, // 修改为contents以匹配后端API期望
+          rating, 
+          difficulty, 
+          workload, 
+          usefulness 
+        })
 
         // 兼容后端返回：若返回评论实体则直接使用，否则本地构造一条
         const serverComment = res?.data || null
