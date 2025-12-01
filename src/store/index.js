@@ -287,16 +287,16 @@ export default new Vuex.Store({
   
   mutations: {
     // 认证相关
-    SET_AUTH(state, { user, token }) {
-      state.isAuthenticated = true
-      state.currentUser = user
-      state.token = token
+  SET_AUTH(state, { user, token }) {
+  state.isAuthenticated = true
+  state.currentUser = user
+  state.token = token
       // 只有当token存在时才保存到sessionStorage
-      if (token) {
+  if (token) {
         sessionStorage.setItem('token', token)
-      }
+  }
       sessionStorage.setItem('user', JSON.stringify(user))
-    },
+},
     
     CLEAR_AUTH(state) {
       state.isAuthenticated = false
@@ -531,7 +531,7 @@ async login({ commit }, credentials) {
             response.headers['Access-Token'];
     
     // 如果响应头中的token包含Bearer前缀，需要去掉
-    if (token && token.startsWith('Bearer ')) {
+    if (token && token.startsWith('token')) {
       token = token.substring(7);
     }
     
@@ -545,16 +545,15 @@ async login({ commit }, credentials) {
         console.log('baseResponse code:', response.data.baseResponse.code);
         console.log('baseResponse message:', response.data.baseResponse.message);
         
-        // 检查成功的状态码 (10000)
-        if (response.data.baseResponse.code === 10000) {
-          // 从响应中提取实际的用户数据
-          user = response.data.user;
-          
+      // 检查成功的状态码 (10000)
+      if (response.data.baseResponse.code === 10000) {
+        // 从响应中提取实际的用户数据
+        user = response.data.user;
+        
           console.log('从响应体提取的用户数据:', user);
-          
-          // 如果响应头中没有token，检查响应体中是否有
-          if (!token) {
-            // 检查baseResponse结构下的各种可能的token位置
+        
+        // 如果响应头中没有token，检查响应体中是否有
+        if (!token) {
             token = response.data.token || 
                    response.data.access_token || 
                    response.data.data?.token ||
@@ -565,9 +564,9 @@ async login({ commit }, credentials) {
                    response.data.baseResponse?.access_token;
             
             console.log('从响应体提取的token:', token);
-          }
-        } else {
-          throw new Error(response.data.baseResponse.message || '登录失败')
+        }
+      } else {
+        throw new Error(response.data.baseResponse.message || '登录失败')
         }
       } else {
         // 非baseResponse格式，可能是直接返回用户数据和token
@@ -1156,11 +1155,36 @@ async login({ commit }, credentials) {
     async fetchCourses({ commit }, params = {}) {
       try {
         commit('SET_LOADING', { key: 'courses', value: true })
-        const response = await courseAPI.getCourses(params)
-        commit('SET_COURSES', response.data)
-        return response.data
+        // 后端文档：GET /api/courses/search，支持 keyword 等查询参数
+        const paging = {
+          page_size: params.page_size || 20,
+          page_num: params.page_num || 1
+        }
+        const merged = { ...paging, ...(params || {}) }
+        const response = await courseAPI.searchCoursesDoc(merged)
+        const data = response?.data || {}
+        const list = Array.isArray(data.courses)
+          ? data.courses
+          : (Array.isArray(data) ? data : [])
+
+        // 将后端课程结构映射为前端统一使用的结构
+        const mapped = list.map((c) => ({
+          id: c.courseId || c.id,
+          title: c.courseName || c.title,
+          description: c.description || '',
+          instructor: c.instructor || c.teacherName || c.teacher || '',
+          college: c.collegeName || c.college || '',
+          credits: c.credits || c.credit || 0,
+          rating: c.averageRating || c.rating || 0,
+          grade: c.grade || '',
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+          raw: c
+        }))
+
+        commit('SET_COURSES', mapped)
+        return { ...data, courses: mapped }
       } catch (error) {
-        // 上抛错误，交由上层统一处理
         throw error
       } finally {
         commit('SET_LOADING', { key: 'courses', value: false })
@@ -1385,29 +1409,37 @@ async login({ commit }, credentials) {
     // 资源相关
     async fetchResources({ commit }, params = {}) {
       try {
-        const response = await resourceAPI.getResources(params)
-        // 确保资源数据有合适的默认值
-        const resources = Array.isArray(response.data) ? response.data.map(resource => ({
-          id: resource.id || resource.resourceId,
-          title: resource.title || '未知资源',
-          description: resource.description || '',
-          type: resource.type || resource.fileType,
+        const paging = {
+          page_size: params.page_size || 20,
+          page_num: params.page_num || 1
+        }
+        const merged = { ...paging, ...(params || {}) }
+        // 后端文档：GET /api/resources/search，返回 { baseResp, resources, total }
+        const response = await resourceAPI.searchResources(merged)
+        const data = response?.data || {}
+        const list = Array.isArray(data.resources) ? data.resources : (Array.isArray(data) ? data : [])
+        // 简单字段映射到前端资源结构（与 searchResources action 一致）
+        const mapped = list.map((resource) => ({
+          id: resource.resourceId || resource.id,
+          title: resource.title,
+          description: resource.description,
+          type: resource.fileType || resource.type,
           filePath: resource.filePath,
           fileSize: resource.fileSize,
           courseId: resource.courseId,
-          course: resource.course || '未知课程',
-          semester: resource.semester || '未知学期',
-          author: resource.author || '未知作者',
-          authorId: resource.authorId || resource.uploaderId,
-          downloads: resource.downloads || resource.downloadCount || 0,
-          rating: resource.rating || resource.averageRating || 0,
-          ratingCount: resource.ratingCount || 0,
+          course: resource.course || '',
+          semester: resource.semester || '',
+          author: resource.author || resource.uploaderId || '',
+          authorId: resource.uploaderId,
+          downloads: resource.downloadCount ?? resource.downloads ?? 0,
+          rating: resource.averageRating ?? resource.rating ?? 0,
+          ratingCount: resource.ratingCount ?? 0,
           status: resource.status,
           createdAt: resource.createdAt,
           tags: resource.tags || []
-        })) : []
-        commit('SET_RESOURCES', resources)
-        return resources
+        }))
+        commit('SET_RESOURCES', mapped)
+        return { ...data, resources: mapped }
       } catch (error) {
         throw error
       }
@@ -1517,14 +1549,28 @@ async login({ commit }, credentials) {
       }
     },
 
-    // 管理员相关
+    // 管理员相关 - 用户列表
     async fetchUsers({ commit }, params = {}) {
       try {
         const response = await adminAPI.getUsers(params)
-        const data = response?.data
-        const list = Array.isArray(data?.users) ? data.users : (Array.isArray(data) ? data : [])
-        commit('SET_USERS', list.length ? list : data)
-        return data
+        const data = response?.data || {}
+        const rawList = Array.isArray(data.users)
+          ? data.users
+          : (Array.isArray(data) ? data : [])
+
+        const mapped = rawList.map((u) => ({
+          id: u.user_id || u.userId || u.id || u.username || '',
+          name: u.username || u.name || '',
+          college: u.college_name || u.college || '',
+          status: u.status || 'active',
+          roleId: u.role_id || u.roleId || null,
+          email: u.email || '',
+          reputationScore: u.reputation_score || u.reputationScore || 0,
+          raw: u
+        }))
+
+        commit('SET_USERS', mapped)
+        return { ...data, users: mapped }
       } catch (error) {
         throw error
       }

@@ -1,13 +1,24 @@
 <template>
-  <div class="px-4 py-4">
+  <div class="px-8 py-6">
     <!-- 资源筛选和上传 -->
-    <div class="bg-white card p-4 mb-6">
-      <h2 class="text-xl font-bold mb-3">资源筛选</h2>
+    <div class="bg-white dark:bg-gray-800 card p-5 mb-8 transition-colors duration-300">
+      <h2 class="text-xl font-bold mb-4 dark:text-white">资源筛选</h2>
       <div class="grid grid-cols-5 gap-4 items-end">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">课程</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            v-model="selectedCourseTitle"
+            @change="onCourseFilterChange"
+          >
+            <option value="全部课程">全部课程</option>
+            <option v-for="course in courseTitles" :key="course" :value="course">{{ course }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">类型</label>
+          <select 
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="selectedType"
             @change="onTypeFilterChange"
           >
@@ -19,9 +30,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">评分</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">评分</label>
           <select 
-            class="w-full border border-gray-300 rounded-md py-2 px-3"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="selectedRating"
             @change="onRatingFilterChange"
           >
@@ -31,13 +42,21 @@
           </select>
         </div>
         <div class="col-span-2 flex justify-end">
+          <button class="btn-primary flex items-center h-10 mr-3" @click="onSearchDoc">
+            <span class="iconify mr-2" data-icon="mdi:magnify"></span>
+            文档版搜索
+          </button>
+          <button class="btn-secondary flex items-center h-10" @click="onUploadMock">
+            <span class="iconify mr-2" data-icon="mdi:upload"></span>
+            上传资源
+          </button>
         </div>
       </div>
     </div>
 
     <!-- 热门资源推荐 -->
-    <div class="mb-6">
-      <h2 class="text-xl font-bold mb-3">热门资源</h2>
+    <div class="mb-8">
+      <h2 class="text-xl font-bold mb-4 dark:text-white">热门资源</h2>
       <div class="custom-grid">
         <ResourceCard 
           v-for="resource in hotResources" 
@@ -49,44 +68,53 @@
     </div>
 
     <!-- 全部资源列表 -->
-    <h2 class="text-xl font-bold mb-3">全部资源</h2>
+    <h2 class="text-xl font-bold mb-4 dark:text-white">全部资源</h2>
     
     <!-- 空状态与重试 -->
-    <div v-if="filteredResources.length === 0" class="card p-6 text-center text-gray-600 mb-6">
-      <p class="mb-3">暂无资源数据或加载失败。</p>
+    <div v-if="filteredResources.length === 0" class="card p-8 text-center text-gray-600 dark:text-gray-400 mb-8">
+      <p class="mb-4">暂无资源数据或加载失败。</p>
       <button class="btn-primary" @click="onSearchDoc">重试加载</button>
     </div>
 
     <div v-else class="custom-grid">
       <div 
         v-for="resource in filteredResources" 
-        :key="resource.id || Math.random()"
-        class="card p-3 flex flex-col"
+        :key="resource.id"
+        class="card p-4 flex flex-col"
       >
-        <div class="flex items-center mb-2">
+        <div class="flex items-center mb-3">
           <div 
-            class="rounded-md flex items-center justify-center p-1.5 mr-2.5"
+            class="rounded-md flex items-center justify-center p-2 mr-3"
             :class="getTypeClass(resource.type)"
           >
             <span 
-              class="iconify text-xl"
+              class="iconify text-2xl"
               :class="getTypeColor(resource.type)"
               :data-icon="getTypeIcon(resource.type)"
             ></span>
           </div>
-          <h3 class="font-bold">{{ resource.title || '未知资源' }}</h3>
+          <h3 class="font-bold dark:text-white">{{ resource.title }}</h3>
         </div>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ resource.course }} · {{ resource.semester }}</p>
         <div class="flex justify-between mt-auto">
           <div class="flex items-center text-sm">
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-5 h-5 mr-1.5"></div>
-
+            <div class="bg-gray-200 dark:bg-gray-600 border-2 border-dashed border-gray-300 dark:border-gray-500 rounded-xl w-6 h-6 mr-2"></div>
+            <span class="dark:text-gray-300">{{ resource.author }}</span>
           </div>
-          <div class="flex items-center text-sm text-gray-500">
-            <div class="star-rating flex mr-1.5">
+          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="star-rating flex mr-2">
+              <span 
+                v-for="star in 5" 
+                :key="star"
+                class="iconify star"
+                :class="{ active: star <= Math.floor(resource.rating) }"
+                data-icon="mdi:star"
+              ></span>
             </div>
+            <span>{{ resource.rating }}</span>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-1.5 mt-2">
+        <div class="grid grid-cols-2 gap-2 mt-3">
           <button 
             class="btn-secondary w-full text-sm"
             @click="viewResourceDetail(resource)"
@@ -97,7 +125,7 @@
           >下载</button>
         </div>
         <button 
-          class="btn-danger w-full mt-1.5 text-xs"
+          class="w-full mt-2 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
           @click="onReport(resource)"
         >举报</button>
       </div>
@@ -182,7 +210,7 @@ export default {
     },
     async onReport(resource) {
       try {
-        await this.reportResource({ resourceId: resource.id, authorId: resource.authorId, reason: '低质量或侵权' })
+        await this.reportResource({ resourceId: resource.id, reason: '低质量或侵权' })
         alert('举报已提交')
       } catch (e) {
         alert('举报失败，请稍后重试')
@@ -198,23 +226,23 @@ export default {
     },
     getTypeClass(type) {
       const classes = {
-        pdf: 'bg-blue-100',
-        word: 'bg-orange-100',
-        presentation: 'bg-purple-100',
-        excel: 'bg-green-100',
-        powerpoint: 'bg-yellow-100'
+        pdf: 'bg-blue-100 dark:bg-blue-900/30',
+        word: 'bg-orange-100 dark:bg-orange-900/30',
+        presentation: 'bg-purple-100 dark:bg-purple-900/30',
+        excel: 'bg-green-100 dark:bg-green-900/30',
+        powerpoint: 'bg-yellow-100 dark:bg-yellow-900/30'
       }
-      return classes[type] || 'bg-gray-100'
+      return classes[type] || 'bg-gray-100 dark:bg-gray-700'
     },
     getTypeColor(type) {
       const colors = {
-        pdf: 'text-blue-500',
-        word: 'text-orange-500',
-        presentation: 'text-purple-500',
-        excel: 'text-green-500',
-        powerpoint: 'text-yellow-500'
+        pdf: 'text-blue-500 dark:text-blue-400',
+        word: 'text-orange-500 dark:text-orange-400',
+        presentation: 'text-purple-500 dark:text-purple-400',
+        excel: 'text-green-500 dark:text-green-400',
+        powerpoint: 'text-yellow-500 dark:text-yellow-400'
       }
-      return colors[type] || 'text-gray-500'
+      return colors[type] || 'text-gray-500 dark:text-gray-400'
     },
     getTypeIcon(type) {
       const icons = {
@@ -227,16 +255,11 @@ export default {
       return icons[type] || 'mdi:file'
     },
     viewResourceDetail(resource) {
-      // 确保资源对象包含authorId信息
-      const resourceWithAuthorInfo = {
-        ...resource,
-        authorId: resource.authorId || resource.userId || null,
-        author: resource.author || '未知作者'
-      }
-      this.$store.commit('SET_SELECTED_RESOURCE', resourceWithAuthorInfo)
+      this.$store.commit('SET_SELECTED_RESOURCE', resource)
       this.$router.push('/resource')
     }
   }
 }
 </script>
+
 
