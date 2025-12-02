@@ -53,15 +53,15 @@
             <NotificationBell />
             
             <!-- 用户信息 -->
-            <div class="flex items-center space-x-2">
-              <img 
-                :src="getUserAvatar(currentUser.role)" 
-                :alt="currentUser.name"
-                class="w-8 h-8 rounded-full"
-                @error="handleAvatarError"
-              />
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ currentUser.name }}</span>
-            </div>
+              <div class="flex items-center space-x-2">
+                <img 
+                  :src="getUserAvatar(currentUser.role)" 
+                  :alt="currentUser.username"
+                  class="w-8 h-8 rounded-full"
+                  @error="handleAvatarError"
+                />
+                <span class="text-sm font-medium text-gray-700">{{ currentUser.username }}</span>
+              </div>
             
             <!-- 用户菜单 -->
             <div class="relative">
@@ -69,7 +69,7 @@
                 @click="showUserMenu = !showUserMenu"
                 class="flex items-center space-x-1 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
               >
-                <span class="text-sm">{{ currentUser.role === 'student' ? '学生' : currentUser.role === 'teacher' ? '教师' : '管理员' }}</span>
+                <span class="text-sm">{{ currentUser.name }}</span>
                 <span class="iconify" data-icon="mdi:chevron-down"></span>
               </button>
               

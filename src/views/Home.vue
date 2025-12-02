@@ -413,7 +413,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['updateFilter', 'selectCourse']),
+    ...mapActions(['updateFilter', 'selectCourse', 'searchCoursesDoc', 'searchResources']),
     viewCourseDetails(course) {
       this.selectCourse(course)
       this.$router.push('/courses')
@@ -440,6 +440,10 @@ export default {
         }
       })
     }
+    
+    // 初始化加载课程和资源数据
+    this.searchCoursesDoc({ page_size: 10, page_num: 1 })
+    this.searchResources({ page_size: 10, page_num: 1 })
   }
 }
 </script>
@@ -449,4 +453,4 @@ export default {
 
 
 
-
+
