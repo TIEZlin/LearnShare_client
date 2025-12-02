@@ -49,6 +49,52 @@
             </div>
           </div>
 
+          <!-- 数据分布扇形图 -->
+          <div class="card p-6">
+            <h2 class="text-xl font-bold mb-4">数据分布</h2>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+              <div class="relative" style="width: 200px; height: 200px;">
+                <svg width="200" height="200" viewBox="0 0 200 200" style="position: absolute; top: 0; left: 0;">
+                  <path
+                    v-for="(segment, index) in pieChartData"
+                    :key="index"
+                    :d="segment.path"
+                    :fill="segment.color"
+                    class="transition-all duration-500 hover:opacity-80"
+                    :style="{ 
+                      opacity: segment.value > 0 ? 1 : 0,
+                      stroke: '#fff',
+                      strokeWidth: 2,
+                      cursor: 'pointer'
+                    }"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold">{{ totalCount.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-500">总计</div>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div
+                  v-for="(segment, index) in pieChartData"
+                  :key="index"
+                  class="flex items-center gap-3"
+                >
+                  <div
+                    class="w-4 h-4 rounded-full"
+                    :style="{ backgroundColor: segment.color }"
+                  ></div>
+                  <div class="flex-1">
+                    <div class="font-medium">{{ segment.label }}</div>
+                    <div class="text-sm text-gray-500">{{ segment.value }} ({{ segment.percentage }}%)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="card p-6">
             <div class="flex justify-between items-center mb-4">
               <div>
@@ -117,17 +163,21 @@
           </div>
 
           <div class="card p-6">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
               <h2 class="text-xl font-bold">用户列表</h2>
-              <input
-                type="text"
-                placeholder="搜索用户..."
-                class="border border-gray-300 rounded-md py-2 px-4 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                v-model="userSearchKeyword"
-              >
+              <div class="flex flex-col md:flex-row gap-3 md:items-center">
+                <input
+                  type="text"
+                  placeholder="搜索用户..."
+                  class="border border-gray-300 rounded-md py-2 px-4 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  v-model="userSearchKeyword"
+                >
+                <button class="btn-secondary text-sm" @click="reloadUsers">刷新列表</button>
+              </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div v-if="filteredUsers.length === 0" class="text-gray-500">暂无用户数据。</div>
+            <div v-else class="overflow-x-auto">
               <table class="w-full">
                 <thead>
                   <tr class="border-b border-gray-200">
@@ -272,23 +322,35 @@
           <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
             <div>
               <h2 class="text-xl font-bold">内容审核</h2>
-              <p class="text-sm text-gray-500">映射接口：/api/admin/audit/*</p>
+              <p class="text-sm text-gray-500">审核待处理的内容，包括资源、课程和评论</p>
             </div>
-            <select v-model="reviewType" class="border border-gray-300 rounded-md py-2 px-4 w-full md:w-64">
-              <option v-for="type in reviewTypeOptions" :key="type.value" :value="type.value">
-                {{ type.label }}
-              </option>
-            </select>
+            <div class="flex flex-col md:flex-row gap-3 md:items-center">
+              <select v-model="reviewType" class="border border-gray-300 rounded-md py-2 px-4 w-full md:w-64" @change="loadReviewList">
+                <option v-for="type in reviewTypeOptions" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+              <button class="btn-secondary text-sm" @click="loadReviewList" :disabled="reviewLoading">
+                {{ reviewLoading ? '加载中...' : '刷新列表' }}
+              </button>
+            </div>
           </div>
-          <div v-if="reviewLoading" class="text-gray-500">加载中...</div>
-          <div v-else-if="currentReviewList.length === 0" class="text-gray-500">暂无审核任务。</div>
+          
+          <div v-if="reviewLoading" class="text-gray-500 text-center py-8">加载中...</div>
+          <div v-else-if="currentReviewList.length === 0" class="text-gray-500 text-center py-8">
+            暂无待审核任务。
+          </div>
           <div v-else class="overflow-x-auto">
             <table class="w-full">
               <thead>
                 <tr class="border-b border-gray-200">
+                  <th class="text-left py-3 text-gray-600 font-medium">ID</th>
                   <th class="text-left py-3 text-gray-600 font-medium">对象</th>
+                  <th class="text-left py-3 text-gray-600 font-medium">类型</th>
                   <th class="text-left py-3 text-gray-600 font-medium">原因</th>
                   <th class="text-left py-3 text-gray-600 font-medium">提交者</th>
+                  <th class="text-left py-3 text-gray-600 font-medium">优先级</th>
+                  <th class="text-left py-3 text-gray-600 font-medium">状态</th>
                   <th class="text-left py-3 text-gray-600 font-medium">提交时间</th>
                   <th class="text-left py-3 text-gray-600 font-medium">操作</th>
                 </tr>
@@ -297,15 +359,56 @@
                 <tr
                   v-for="review in currentReviewList"
                   :key="review.id"
-                  class="border-b border-gray-100"
+                  class="border-b border-gray-100 hover:bg-gray-50"
                 >
-                  <td class="py-3 font-medium">{{ review.title }}</td>
-                  <td class="py-3 text-gray-600">{{ review.reason }}</td>
-                  <td class="py-3 text-gray-600">{{ review.reporter }}</td>
-                  <td class="py-3 text-gray-600">{{ review.createdAt }}</td>
-                  <td class="py-3 space-x-2">
-                    <button class="btn-secondary text-xs" @click="handleReviewAction(review, 'reject')">驳回</button>
-                    <button class="btn-primary text-xs" @click="handleReviewAction(review, 'approve')">通过</button>
+                  <td class="py-3 text-gray-500 text-sm">{{ review.id }}</td>
+                  <td class="py-3 font-medium">
+                    <div>{{ review.title }}</div>
+                    <div class="text-xs text-gray-400">目标ID: {{ review.targetId || '—' }}</div>
+                  </td>
+                  <td class="py-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ review.targetType || '—' }}
+                    </span>
+                  </td>
+                  <td class="py-3 text-gray-600 max-w-xs">
+                    <div class="truncate" :title="review.reason">{{ review.reason || '—' }}</div>
+                  </td>
+                  <td class="py-3 text-gray-600">{{ review.reporter || '系统' }}</td>
+                  <td class="py-3">
+                    <span 
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                      :class="getPriorityClass(review.priority)"
+                    >
+                      {{ getPriorityText(review.priority) }}
+                    </span>
+                  </td>
+                  <td class="py-3">
+                    <span 
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                      :class="getReviewStatusClass(review.status)"
+                    >
+                      {{ getReviewStatusText(review.status) }}
+                    </span>
+                  </td>
+                  <td class="py-3 text-gray-600 text-sm">{{ review.createdAt || '—' }}</td>
+                  <td class="py-3">
+                    <div class="flex flex-col gap-1">
+                      <button 
+                        class="btn-primary text-xs px-3 py-1" 
+                        @click="handleReviewAction(review, 'approve')"
+                        :disabled="review.status === 'approved' || review.status === 'rejected'"
+                      >
+                        通过
+                      </button>
+                      <button 
+                        class="btn-secondary text-xs px-3 py-1" 
+                        @click="handleReviewAction(review, 'reject')"
+                        :disabled="review.status === 'approved' || review.status === 'rejected'"
+                      >
+                        驳回
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -471,6 +574,61 @@ export default {
         { key: 'courses', title: '课程数量', value: stats.totalCourses || 0, growth: stats.courseGrowth || 0, icon: 'mdi:book-education', bgClass: 'bg-green-100', colorClass: 'text-green-600' },
         { key: 'resources', title: '资源数量', value: stats.totalResources || 0, growth: stats.resourceGrowth || 0, icon: 'mdi:file-document', bgClass: 'bg-purple-100', colorClass: 'text-purple-600' }
       ]
+    },
+    totalCount() {
+      const stats = this.statistics || {}
+      return (stats.totalUsers || 0) + (stats.totalCourses || 0) + (stats.totalResources || 0)
+    },
+    pieChartData() {
+      const stats = this.statistics || {}
+      const users = stats.totalUsers || 0
+      const courses = stats.totalCourses || 0
+      const resources = stats.totalResources || 0
+      const total = users + courses + resources
+      
+      if (total === 0) {
+        return [
+          { label: '暂无数据', value: 0, percentage: 0, color: '#e5e7eb', path: '' }
+        ]
+      }
+      
+      const centerX = 100
+      const centerY = 100
+      const radius = 80
+      const colors = ['#3b82f6', '#10b981', '#8b5cf6'] // blue, green, purple
+      const labels = ['用户', '课程', '资源']
+      const values = [users, courses, resources]
+      
+      let currentAngle = -Math.PI / 2 // 从顶部开始，-90度
+      return values.map((value, index) => {
+        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+        const angle = (value / total) * 2 * Math.PI
+        
+        // 计算扇形的起始和结束点
+        const startAngle = currentAngle
+        const endAngle = currentAngle + angle
+        currentAngle = endAngle
+        
+        // 计算起点和终点坐标
+        const x1 = centerX + radius * Math.cos(startAngle)
+        const y1 = centerY + radius * Math.sin(startAngle)
+        const x2 = centerX + radius * Math.cos(endAngle)
+        const y2 = centerY + radius * Math.sin(endAngle)
+        
+        // 大弧标志（如果角度大于180度）
+        const largeArcFlag = angle > Math.PI ? 1 : 0
+        
+        // 生成path路径
+        const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
+        
+        return {
+          label: labels[index],
+          value: value,
+          percentage: percentage,
+          color: colors[index],
+          path: path
+        }
+      })
     }
   },
   watch: {
@@ -478,10 +636,14 @@ export default {
       this.loadReviewList()
     },
     activeMenu(newMenu) {
-      if (newMenu === 'courses') {
+      if (newMenu === 'users') {
+        this.ensureUsersLoaded()
+      } else if (newMenu === 'courses') {
         this.ensureCoursesLoaded()
       } else if (newMenu === 'resources') {
         this.ensureResourcesLoaded()
+      } else if (newMenu === 'review') {
+        this.loadReviewList()
       }
     }
   },
@@ -522,6 +684,15 @@ export default {
         this.handleError(error, '初始化管理员数据失败')
       }
     },
+    async ensureUsersLoaded() {
+      if (!Array.isArray(this.users) || this.users.length === 0) {
+        try {
+          await this.fetchUsers()
+        } catch (error) {
+          this.handleError(error, '加载用户数据失败')
+        }
+      }
+    },
     async ensureCoursesLoaded() {
       if (!Array.isArray(this.courses) || this.courses.length === 0) {
         try {
@@ -554,6 +725,14 @@ export default {
         this.notifySuccess('资源列表已更新')
       } catch (error) {
         this.handleError(error, '刷新资源列表失败')
+      }
+    },
+    async reloadUsers() {
+      try {
+        await this.fetchUsers()
+        this.notifySuccess('用户列表已更新')
+      } catch (error) {
+        this.handleError(error, '刷新用户列表失败')
       }
     },
     viewCourseDetail(course) {
@@ -606,6 +785,9 @@ export default {
       }
     },
     async handleReviewAction(review, action) {
+      const actionText = action === 'approve' ? '通过' : '驳回'
+      if (!confirm(`确认${actionText}审核项「${review.title}」？`)) return
+      
       try {
         const payload = { reviewId: review.id, action }
         if (this.reviewType === 'resources') {
@@ -617,10 +799,46 @@ export default {
         } else {
           await this.processResourceCommentReview(payload)
         }
-        this.notifySuccess('审核操作已提交')
+        this.notifySuccess(`审核操作已提交：${actionText}`)
+        // 刷新列表
+        await this.loadReviewList()
       } catch (error) {
         this.handleError(error, '审核操作失败')
       }
+    },
+    getPriorityClass(priority) {
+      if (priority === null || priority === undefined) return 'bg-gray-100 text-gray-800'
+      if (priority >= 8) return 'bg-red-100 text-red-800'
+      if (priority >= 5) return 'bg-orange-100 text-orange-800'
+      if (priority >= 3) return 'bg-yellow-100 text-yellow-800'
+      return 'bg-blue-100 text-blue-800'
+    },
+    getPriorityText(priority) {
+      if (priority === null || priority === undefined) return '普通'
+      if (priority >= 8) return '紧急'
+      if (priority >= 5) return '高'
+      if (priority >= 3) return '中'
+      return '低'
+    },
+    getReviewStatusClass(status) {
+      const normalized = (status || 'pending').toLowerCase()
+      const map = {
+        pending: 'bg-yellow-100 text-yellow-800',
+        approved: 'bg-green-100 text-green-800',
+        rejected: 'bg-red-100 text-red-800',
+        processing: 'bg-blue-100 text-blue-800'
+      }
+      return map[normalized] || 'bg-gray-100 text-gray-800'
+    },
+    getReviewStatusText(status) {
+      const normalized = (status || 'pending').toLowerCase()
+      const map = {
+        pending: '待审核',
+        approved: '已通过',
+        rejected: '已驳回',
+        processing: '处理中'
+      }
+      return map[normalized] || '未知'
     },
     async submitNewUser() {
       if (!this.newUserForm.username || !this.newUserForm.email || !this.newUserForm.password || !this.newUserForm.role_id) {

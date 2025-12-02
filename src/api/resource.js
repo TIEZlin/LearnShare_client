@@ -32,20 +32,48 @@ export const resourceAPI = {
     if (!isFormData) {
       body = new FormData()
       if (resourceData && typeof resourceData === 'object') {
-        if (resourceData.file !== undefined) body.append('file', resourceData.file)
-        if (resourceData.title !== undefined) body.append('title', resourceData.title)
-        if (resourceData.description !== undefined) body.append('description', resourceData.description)
-        if (resourceData.course_id !== undefined) body.append('course_id', resourceData.course_id)
-        // 文档 tags 为 [string]，既兼容数组也兼容逗号分隔字符串
-        if (resourceData.tags !== undefined) {
-          const tags = Array.isArray(resourceData.tags)
-            ? resourceData.tags
-            : String(resourceData.tags).split(',').map(s => s.trim()).filter(Boolean)
-          tags.forEach(t => body.append('tags', t))
+        // 文件（必填）
+        if (resourceData.file !== undefined && resourceData.file !== null) {
+          body.append('file', resourceData.file)
+        }
+        // 标题（必填）
+        if (resourceData.title !== undefined && resourceData.title !== null && resourceData.title !== '') {
+          body.append('title', String(resourceData.title).trim())
+        }
+        // 描述（可选，只有非空时才发送）
+        if (resourceData.description !== undefined && resourceData.description !== null && resourceData.description !== '') {
+          body.append('description', String(resourceData.description).trim())
+        }
+        // 课程ID（必填，确保是数字格式）
+        if (resourceData.course_id !== undefined && resourceData.course_id !== null && resourceData.course_id !== '') {
+          const courseId = typeof resourceData.course_id === 'number' 
+            ? resourceData.course_id 
+            : parseInt(String(resourceData.course_id), 10)
+          if (!isNaN(courseId)) {
+            body.append('course_id', String(courseId))
+          }
+        }
+        // 标签（可选，文档要求是 [string] 数组）
+        if (resourceData.tags !== undefined && resourceData.tags !== null) {
+          let tags = []
+          if (Array.isArray(resourceData.tags)) {
+            // 数组格式：如果是对象数组，提取 tagName；如果是字符串数组，直接使用
+            tags = resourceData.tags
+              .map(t => typeof t === 'string' ? t.trim() : (t.tagName || t.name || String(t).trim()))
+              .filter(Boolean)
+          } else if (typeof resourceData.tags === 'string' && resourceData.tags.trim()) {
+            // 字符串格式：用逗号分隔
+            tags = resourceData.tags.split(',').map(s => s.trim()).filter(Boolean)
+          }
+          // 只有非空标签数组才发送
+          if (tags.length > 0) {
+            tags.forEach(t => body.append('tags', String(t)))
+          }
         }
       }
     }
-    cfg.headers = { ...(cfg.headers || {}), 'Content-Type': 'multipart/form-data' }
+    // 不要手动设置 Content-Type，让浏览器自动设置 multipart/form-data 和 boundary
+    // cfg.headers = { ...(cfg.headers || {}), 'Content-Type': 'multipart/form-data' }
     return api.post('/resources', body, cfg)
   },
 

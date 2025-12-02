@@ -51,14 +51,6 @@
         <h3 class="font-bold mb-1 dark:text-gray-200">账户安全</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">修改密码和安全设置</p>
       </div>
-      
-      <div class="card p-5 text-center hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-        <div class="bg-purple-100 dark:bg-purple-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span class="iconify text-2xl text-purple-700 dark:text-purple-300" data-icon="mdi:gift"></span>
-        </div>
-        <h3 class="font-bold mb-1 dark:text-gray-200">兑换商城</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">使用积分兑换礼品</p>
-      </div>
     </div>
 
     <!-- 最近贡献 -->

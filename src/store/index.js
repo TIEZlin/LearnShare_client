@@ -234,20 +234,7 @@ export default new Vuex.Store({
     pendingResourceCommentReviews: [],
     
     // 用户列表
-    users: [
-      {
-        id: 'S20201234',
-        name: '张明',
-        college: '计算机学院',
-        status: '正常'
-      },
-      {
-        id: 'S20215678',
-        name: '李华',
-        college: '经济学院',
-        status: '限制中'
-      }
-    ],
+    users: [],
     
     // 统计数据
     statistics: {
@@ -1567,14 +1554,19 @@ async login({ commit }, credentials) {
     },
 
     // 管理员相关 - 用户列表
+    // 获取用户列表 - 调用后端接口 GET /api/admin/users
     async fetchUsers({ commit }, params = {}) {
       try {
+        commit('SET_LOADING', { key: 'users', value: true })
         const response = await adminAPI.getUsers(params)
         const data = response?.data || {}
+        
+        // 尝试从多个可能的字段中提取用户列表
         const rawList = Array.isArray(data.users)
           ? data.users
-          : (Array.isArray(data) ? data : [])
+          : (Array.isArray(data.userList) ? data.userList : (Array.isArray(data) ? data : []))
 
+        // 映射后端字段到前端字段
         const mapped = rawList.map((u) => ({
           id: u.user_id || u.userId || u.id || u.username || '',
           name: u.username || u.name || '',
@@ -1589,7 +1581,12 @@ async login({ commit }, credentials) {
         commit('SET_USERS', mapped)
         return { ...data, users: mapped }
       } catch (error) {
+        console.error('[fetchUsers] 获取用户列表失败:', error)
+        // 清空用户列表，避免显示旧数据
+        commit('SET_USERS', [])
         throw error
+      } finally {
+        commit('SET_LOADING', { key: 'users', value: false })
       }
     },
 
@@ -1842,12 +1839,21 @@ async login({ commit }, credentials) {
       }
     },
 
+    // 注意：接口文档中没有 GET /api/admin/statistics，此接口可能未实现
+    // 如果接口不存在（404），静默失败，保持使用初始统计数据
     async fetchStatistics({ commit }) {
       try {
         const response = await adminAPI.getStatistics()
         commit('SET_STATISTICS', response.data)
         return response.data
       } catch (error) {
+        // 接口不存在（404）时静默失败，不抛出错误，保持使用初始统计数据
+        const status = error?.response?.status
+        if (status === 404) {
+          console.warn('[fetchStatistics] GET /api/admin/statistics 接口未实现，使用示例数据')
+          return null
+        }
+        // 其他错误仍然抛出
         throw error
       }
     },
